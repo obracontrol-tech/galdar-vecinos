@@ -158,7 +158,7 @@
       <div style="margin-top:18px;background:linear-gradient(135deg,#1A3A6B08,#3B6D1112);border:1.5px solid #3B6D11;border-radius:14px;padding:18px 16px;text-align:center;">
         <div style="font-size:16px;font-weight:bold;color:#3B6D11;margin-bottom:4px;">💡 ¿Tienes una idea para Gáldar?</div>
         <div style="font-size:12px;color:#555;margin-bottom:14px;">Comparte tus propuestas, mejoras o recomendaciones</div>
-        <button id="btn-abrir-sug" style="background:#3B6D11;color:#fff;border:none;border-radius:30px;padding:11px 24px;font-size:14px;font-weight:bold;cursor:pointer;width:100%;">✍️ Enviar sugerencia o mejora</button>
+        <button id="btn-abrir-sug" style="background:#3B6D11;color:#fff;border:none;border-radius:30px;padding:11px 24px;font-size:14px;font-weight:bold;cursor:pointer;width:100%;" onclick="var f=document.getElementById('form-sug');f.style.display=f.style.display==='block'?'none':'block';if(f.style.display==='block')f.scrollIntoView({behavior:'smooth'});">✍️ Enviar sugerencia o mejora</button>
       </div>
 
       <div id="form-sug" style="display:none;margin-top:16px;">
@@ -177,28 +177,28 @@
           <input type="hidden" id="sug-barrio" value="">
           <div id="sug-barrio-selector">
             <div class="zona-grupo"><div class="zona-label" style="color:#0077CC">🌊 Costa</div><div class="zona-chips">
-              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Puerto de Sardina" data-color="#0077CC">Puerto de Sardina</button>
-              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="El Agujero" data-color="#0077CC">El Agujero</button>
-              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="La Guancha" data-color="#0077CC">La Guancha</button>
+              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Puerto de Sardina" data-color="#0077CC" onclick="var bs=document.querySelectorAll('#sug-barrio-selector .sug-barrio-btn');bs.forEach(function(b){b.style.background='#fff';b.style.color='#555';b.style.borderColor='#ddd';});this.style.background='#0077CC';this.style.color='#fff';this.style.borderColor='#0077CC';document.getElementById('sug-barrio').value='Puerto de Sardina';">Puerto de Sardina</button>
+              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="El Agujero" data-color="#0077CC" onclick="var bs=document.querySelectorAll('#sug-barrio-selector .sug-barrio-btn');bs.forEach(function(b){b.style.background='#fff';b.style.color='#555';b.style.borderColor='#ddd';});this.style.background='#0077CC';this.style.color='#fff';this.style.borderColor='#0077CC';document.getElementById('sug-barrio').value='El Agujero';">El Agujero</button>
+              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="La Guancha" data-color="#0077CC" onclick="var bs=document.querySelectorAll('#sug-barrio-selector .sug-barrio-btn');bs.forEach(function(b){b.style.background='#fff';b.style.color='#555';b.style.borderColor='#ddd';});this.style.background='#0077CC';this.style.color='#fff';this.style.borderColor='#0077CC';document.getElementById('sug-barrio').value='La Guancha';">La Guancha</button>
             </div></div>
             <div class="zona-grupo"><div class="zona-label" style="color:#FF9900">🏠 Urbana</div><div class="zona-chips">
-              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Gáldar Casco" data-color="#FF9900">Gáldar Casco</button>
-              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="San Isidro" data-color="#FF9900">San Isidro</button>
-              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Barrial" data-color="#FF9900">Barrial</button>
-              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Marmolejos" data-color="#FF9900">Marmolejos</button>
-              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Los Quintanas - Piso Firme" data-color="#FF9900">Los Quintanas</button>
+              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Gáldar Casco" data-color="#FF9900" onclick="var bs=document.querySelectorAll('#sug-barrio-selector .sug-barrio-btn');bs.forEach(function(b){b.style.background='#fff';b.style.color='#555';b.style.borderColor='#ddd';});this.style.background='#FF9900';this.style.color='#fff';this.style.borderColor='#FF9900';document.getElementById('sug-barrio').value='Gáldar Casco';">Gáldar Casco</button>
+              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="San Isidro" data-color="#FF9900" onclick="var bs=document.querySelectorAll('#sug-barrio-selector .sug-barrio-btn');bs.forEach(function(b){b.style.background='#fff';b.style.color='#555';b.style.borderColor='#ddd';});this.style.background='#FF9900';this.style.color='#fff';this.style.borderColor='#FF9900';document.getElementById('sug-barrio').value='San Isidro';">San Isidro</button>
+              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Barrial" data-color="#FF9900" onclick="var bs=document.querySelectorAll('#sug-barrio-selector .sug-barrio-btn');bs.forEach(function(b){b.style.background='#fff';b.style.color='#555';b.style.borderColor='#ddd';});this.style.background='#FF9900';this.style.color='#fff';this.style.borderColor='#FF9900';document.getElementById('sug-barrio').value='Barrial';">Barrial</button>
+              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Marmolejos" data-color="#FF9900" onclick="var bs=document.querySelectorAll('#sug-barrio-selector .sug-barrio-btn');bs.forEach(function(b){b.style.background='#fff';b.style.color='#555';b.style.borderColor='#ddd';});this.style.background='#FF9900';this.style.color='#fff';this.style.borderColor='#FF9900';document.getElementById('sug-barrio').value='Marmolejos';">Marmolejos</button>
+              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Los Quintanas - Piso Firme" data-color="#FF9900" onclick="var bs=document.querySelectorAll('#sug-barrio-selector .sug-barrio-btn');bs.forEach(function(b){b.style.background='#fff';b.style.color='#555';b.style.borderColor='#ddd';});this.style.background='#FF9900';this.style.color='#fff';this.style.borderColor='#FF9900';document.getElementById('sug-barrio').value='Los Quintanas - Piso Firme';">Los Quintanas</button>
             </div></div>
             <div class="zona-grupo"><div class="zona-label" style="color:#33AA33">🌿 Medianías</div><div class="zona-chips">
-              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Hoya de Pineda" data-color="#33AA33">Hoya de Pineda</button>
-              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Saucillo" data-color="#33AA33">Saucillo</button>
-              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Juncalillo" data-color="#33AA33">Juncalillo</button>
+              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Hoya de Pineda" data-color="#33AA33" onclick="var bs=document.querySelectorAll('#sug-barrio-selector .sug-barrio-btn');bs.forEach(function(b){b.style.background='#fff';b.style.color='#555';b.style.borderColor='#ddd';});this.style.background='#33AA33';this.style.color='#fff';this.style.borderColor='#33AA33';document.getElementById('sug-barrio').value='Hoya de Pineda';">Hoya de Pineda</button>
+              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Saucillo" data-color="#33AA33" onclick="var bs=document.querySelectorAll('#sug-barrio-selector .sug-barrio-btn');bs.forEach(function(b){b.style.background='#fff';b.style.color='#555';b.style.borderColor='#ddd';});this.style.background='#33AA33';this.style.color='#fff';this.style.borderColor='#33AA33';document.getElementById('sug-barrio').value='Saucillo';">Saucillo</button>
+              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Juncalillo" data-color="#33AA33" onclick="var bs=document.querySelectorAll('#sug-barrio-selector .sug-barrio-btn');bs.forEach(function(b){b.style.background='#fff';b.style.color='#555';b.style.borderColor='#ddd';});this.style.background='#33AA33';this.style.color='#fff';this.style.borderColor='#33AA33';document.getElementById('sug-barrio').value='Juncalillo';">Juncalillo</button>
             </div></div>
             <div class="zona-grupo"><div class="zona-label" style="color:#663399">⛰️ Cumbre</div><div class="zona-chips">
-              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Caideros" data-color="#663399">Caideros</button>
-              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Fagajesto" data-color="#663399">Fagajesto</button>
+              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Caideros" data-color="#663399" onclick="var bs=document.querySelectorAll('#sug-barrio-selector .sug-barrio-btn');bs.forEach(function(b){b.style.background='#fff';b.style.color='#555';b.style.borderColor='#ddd';});this.style.background='#663399';this.style.color='#fff';this.style.borderColor='#663399';document.getElementById('sug-barrio').value='Caideros';">Caideros</button>
+              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Fagajesto" data-color="#663399" onclick="var bs=document.querySelectorAll('#sug-barrio-selector .sug-barrio-btn');bs.forEach(function(b){b.style.background='#fff';b.style.color='#555';b.style.borderColor='#ddd';});this.style.background='#663399';this.style.color='#fff';this.style.borderColor='#663399';document.getElementById('sug-barrio').value='Fagajesto';">Fagajesto</button>
             </div></div>
             <div class="zona-grupo"><div class="zona-label" style="color:#888">🌍 General</div><div class="zona-chips">
-              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Todo el municipio" data-color="#888">Todo el municipio</button>
+              <button type="button" class="sug-barrio-btn barrio-btn" data-barrio="Todo el municipio" data-color="#888" onclick="var bs=document.querySelectorAll('#sug-barrio-selector .sug-barrio-btn');bs.forEach(function(b){b.style.background='#fff';b.style.color='#555';b.style.borderColor='#ddd';});this.style.background='#888';this.style.color='#fff';this.style.borderColor='#888';document.getElementById('sug-barrio').value='Todo el municipio';">Todo el municipio</button>
             </div></div>
           </div>
         </div>
@@ -212,7 +212,7 @@
           </div>
           <div id="voz-status-sug-texto" class="voz-status hidden"><span class="voz-dot"></span> Escuchando...</div>
         </div>
-        <button id="btn-enviar-sug" style="background:#3B6D11;color:#fff;border:none;border-radius:30px;padding:11px 24px;font-size:14px;font-weight:bold;cursor:pointer;width:100%;margin-top:8px;">💡 Enviar mi sugerencia</button>
+        <button id="btn-enviar-sug" style="background:#3B6D11;color:#fff;border:none;border-radius:30px;padding:11px 24px;font-size:14px;font-weight:bold;cursor:pointer;width:100%;margin-top:8px;" onclick="window.enviarSugerenciaGlobal()">💡 Enviar mi sugerencia</button>
       </div>
 
     </div>
@@ -221,7 +221,7 @@
       <div class="check-circle" style="background:#3B6D11">💡</div>
       <h2>¡Sugerencia enviada!</h2>
       <p>José Blas ha recibido tu idea.<br>¡Gracias por construir un Gáldar mejor!</p>
-      <button class="btn-primary" style="background:#3B6D11" id="btn-volver-sug">Volver al inicio</button>
+      <button class="btn-primary" style="background:#3B6D11" id="btn-volver-sug" onclick="resetear()">Volver al inicio</button>
     </div>
 
     <div id="enviada-ok" class="hidden enviada-ok">
