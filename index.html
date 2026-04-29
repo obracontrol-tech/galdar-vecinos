@@ -214,7 +214,8 @@ const db = getFirestore(app);
 
 const WORKER = "https://orange-boat-6d42.pedrosaborrego.workers.dev/";
 const TG_TOKEN = "8772067102:AAFNR2Txk6P9XxLZg9GZwunT4v1YcdNLEZY";
-const TG_CHAT = "8601457137";
+const TG_CHAT = "8601457137";    // Juan Manuel
+const TG_CHAT_BLAS = "8655270396"; // Jose Blas
 let fotoBase64 = null;
 
 // Splash
@@ -225,11 +226,14 @@ setTimeout(() => {
 
 // Telegram
 async function tg(emoji, tipo, barrio, nombre, texto) {
-  try {
-    await fetch(WORKER, {method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({telegram:true, token:TG_TOKEN, chat_id:TG_CHAT,
-        text: emoji+' '+tipo+' en Galdar\n📍 '+barrio+'\n👤 '+nombre+'\n💬 '+texto.substring(0,120)})});
-  } catch(e) {}
+  const nl = String.fromCharCode(10);
+  const msg = emoji+' '+tipo+' en Galdar'+nl+'📍 '+barrio+nl+'👤 '+nombre+nl+'💬 '+texto.substring(0,120);
+  for (const chat_id of [TG_CHAT, TG_CHAT_BLAS]) {
+    try {
+      await fetch(WORKER, {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({telegram:true, token:TG_TOKEN, chat_id:chat_id, text:msg})});
+    } catch(e) {}
+  }
 }
 
 // Voz genérica
