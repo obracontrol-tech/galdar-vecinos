@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1A3A6B">
+  <meta name="description" content="Envía tu queja vecinal a José Blas Díaz Bolaños — Gáldar">
+  <title>Quejas Vecinales · Gáldar</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="logo.png">
+  <link rel="apple-touch-icon" href="logo.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="splash">
+  <img src="logo.png" alt="Unidos por Gran Canaria">
+  <p>Cargando...</p>
+</div>
+
+<div id="app" class="hidden">
+
+  <header>
+    <div class="header-logo-bar">
+      <img src="logo.png" class="logo-img" alt="Unidos por Gran Canaria">
+      <div class="header-concejal">
+        <div class="header-name">José Blas Díaz Bolaños</div>
+        <div class="header-role">Concejal · Ayuntamiento de Gáldar</div>
+      </div>
+    </div>
+    <div class="header-bottom">
+      <div class="header-title">Quejas Vecinales</div>
+      <div class="header-sub">Tu voz llega al Ayuntamiento</div>
+    </div>
+  </header>
+
+  <div class="contenido">
+
+    <div id="formulario">
+
+      <div class="campo">
+        <label>Tu nombre (opcional) <span class="badge-anonimo">Si lo dejas vacío aparecerá como <strong>Anónimo</strong></span></label>
+        <div class="textarea-wrapper">
+          <input type="text" id="nombre" placeholder="Ej. María González" oninput="capitalizarCampo(this)">
+          <button class="btn-mic" id="btn-mic-nombre" onclick="toggleVozCampo('nombre','btn-mic-nombre','voz-status-nombre')" title="Dictar nombre">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+            </svg>
+          </button>
+        </div>
+        <div id="voz-status-nombre" class="voz-status hidden"><span class="voz-dot"></span> Escuchando...</div>
+      </div>
+
+      <div class="campo">
+        <label>Barrio o zona *</label>
+        <select id="barrio">
+          <option value="">Selecciona tu barrio...</option>
+          <option>Centro de Gáldar</option>
+          <option>La Montaña</option>
+          <option>Sardina del Norte</option>
+          <option>El Agujero</option>
+          <option>Barrial</option>
+          <option>Cañada Honda</option>
+          <option>Otro barrio</option>
+        </select>
+      </div>
+
+      <div class="campo">
+        <label>Categoría del problema *</label>
+        <select id="categoria">
+          <option value="">Selecciona categoría...</option>
+          <option>Vías y baches</option>
+          <option>Iluminación pública</option>
+          <option>Limpieza y residuos</option>
+          <option>Parques y zonas verdes</option>
+          <option>Servicios sociales</option>
+          <option>Ruidos y molestias</option>
+          <option>Transporte</option>
+          <option>Otra</option>
+        </select>
+      </div>
+
+      <div class="campo">
+        <label>Describe el problema *</label>
+        <div class="textarea-wrapper">
+          <textarea id="descripcion" placeholder="Cuéntanos qué está pasando... o usa el micrófono" oninput="capitalizarCampo(this)"></textarea>
+          <button class="btn-mic" id="btn-mic" onclick="toggleVoz()" title="Dictar por voz">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+            </svg>
+          </button>
+        </div>
+        <div id="voz-status" class="voz-status hidden"><span class="voz-dot"></span> Escuchando... habla ahora</div>
+      </div>
+
+      <div class="campo">
+        <label>Foto de la incidencia (opcional)</label>
+        <div class="foto-area" id="foto-area" onclick="abrirCamara()">
+          <div id="foto-placeholder">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1A3A6B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+            <span>Toca para hacer una foto</span>
+          </div>
+          <img id="foto-preview" class="hidden" alt="Foto de la incidencia">
+          <button id="btn-borrar-foto" class="btn-borrar-foto hidden" onclick="borrarFoto(event)">✕ Borrar foto</button>
+        </div>
+        <input type="file" id="input-camara" accept="image/*" capture="environment" style="display:none" onchange="mostrarFoto(event)">
+      </div>
+
+      <button class="btn-ia" id="btn-ia" onclick="analizarIA()">
+        <span id="ia-icono">✦</span> Analizar con IA antes de enviar
+      </button>
+
+      <div id="ia-resultado" class="hidden">
+        <div class="ia-box">
+          <div class="ia-label">ANÁLISIS IA</div>
+          <div id="ia-texto"></div>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="enviarQueja()">Enviar queja al concejal</button>
+
+    </div>
+
+    <div id="enviada-ok" class="hidden enviada-ok">
+      <div class="check-circle">✓</div>
+      <h2>¡Queja enviada!</h2>
+      <p>José Blas la ha recibido y la llevará al próximo pleno municipal.<br>Gracias por participar en la mejora de Gáldar.</p>
+      <button class="btn-primary" onclick="nuevaQueja()">Enviar otra queja</button>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyArK1mSHIHsxObbPxsG8VB7HgFMy2tC-6U",
+    authDomain: "galdar-quejas.firebaseapp.com",
+    projectId: "galdar-quejas",
+    storageBucket: "galdar-quejas.firebasestorage.app",
+    messagingSenderId: "260225193649",
+    appId: "1:260225193649:web:6ca2c3ef2007685850f490"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const WORKER_URL = "https://orange-boat-6d42.pedrosaborrego.workers.dev/";
+  const TG_TOKEN = "8772067102:AAFNR2Txk6P9XxLZg9GZwunT4v1YcdNLEZY";
+  const TG_CHAT = "8601457137";
+
+  async function enviarTelegram(barrio, categoria, nombre, descripcion) {
+    try {
+      const msg = `🔔 Nueva queja en Gáldar\n📍 ${barrio} · ${categoria}\n👤 ${nombre}\n💬 ${descripcion.substring(0, 120)}`;
+      await fetch(WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telegram: true, token: TG_TOKEN, chat_id: TG_CHAT, text: msg })
+      });
+    } catch(e) { console.log('Telegram error:', e); }
+  }
+
+  // Splash
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      document.getElementById('splash').classList.add('hidden');
+      document.getElementById('app').classList.remove('hidden');
+    }, 1000);
+  });
+
+  // ── CAPITALIZAR
+  window.capitalizarCampo = function(el) {
+    const pos = el.selectionStart;
+    const val = el.value;
+    if (!val.length) return;
+    const nuevo = val.charAt(0).toUpperCase() + val.slice(1);
+    if (nuevo !== val) { el.value = nuevo; el.setSelectionRange(pos, pos); }
+  }
+
+  function capitalizarTexto(t) {
+    return t.replace(/(^|[.!?]\s+)([a-záéíóúüñ])/gi, (m,p1,p2) => p1 + p2.toUpperCase());
+  }
+
+  // ── VOZ DESCRIPCIÓN
+  let reconocimiento = null;
+  let grabando = false;
+
+  window.toggleVoz = function() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { alert('Usa Chrome en Android para el micrófono.'); return; }
+    if (grabando) { grabando = false; if (reconocimiento) reconocimiento.abort(); pararVoz(); return; }
+    grabando = true;
+    const btn = document.getElementById('btn-mic');
+    const status = document.getElementById('voz-status');
+    const textarea = document.getElementById('descripcion');
+    btn.classList.add('grabando');
+    status.classList.remove('hidden');
+    function escuchar() {
+      if (!grabando) return;
+      const r = new SR();
+      reconocimiento = r;
+      r.lang = 'es-ES'; r.continuous = false; r.interimResults = false; r.maxAlternatives = 1;
+      r.onresult = (e) => {
+        if (e.results.length > 0) {
+          let frase = capitalizarTexto(e.results[0][0].transcript.trim());
+          const actual = textarea.value.trim();
+          textarea.value = actual ? actual + ' ' + frase : frase;
+        }
+      };
+      r.onerror = (e) => { if (e.error === 'no-speech') { if (grabando) escuchar(); } else { grabando = false; pararVoz(); } };
+      r.onend = () => { if (grabando) escuchar(); };
+      r.start();
+    }
+    escuchar();
+  }
+
+  function pararVoz() {
+    grabando = false;
+    document.getElementById('btn-mic').classList.remove('grabando');
+    document.getElementById('voz-status').classList.add('hidden');
+  }
+
+  // ── VOZ CAMPO GENÉRICO (nombre)
+  window.toggleVozCampo = function(campoId, btnId, statusId) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { alert('Usa Chrome en Android para el micrófono.'); return; }
+    const btn = document.getElementById(btnId);
+    const status = document.getElementById(statusId);
+    const campo = document.getElementById(campoId);
+    if (btn.classList.contains('grabando')) { if (reconocimiento) reconocimiento.abort(); btn.classList.remove('grabando'); status.classList.add('hidden'); return; }
+    const r = new SR();
+    reconocimiento = r;
+    r.lang = 'es-ES'; r.continuous = false; r.interimResults = false; r.maxAlternatives = 1;
+    r.onstart = () => { btn.classList.add('grabando'); status.classList.remove('hidden'); };
+    r.onresult = (e) => {
+      if (e.results.length > 0) {
+        let t = e.results[0][0].transcript.trim();
+        t = t.charAt(0).toUpperCase() + t.slice(1);
+        campo.value = (campo.value ? campo.value + ' ' : '') + t;
+      }
+    };
+    r.onerror = () => { btn.classList.remove('grabando'); status.classList.add('hidden'); };
+    r.onend = () => { btn.classList.remove('grabando'); status.classList.add('hidden'); };
+    r.start();
+  }
+
+  // ── CÁMARA
+  let fotoBase64 = null;
+
+  window.abrirCamara = function() { document.getElementById('input-camara').click(); }
+
+  window.mostrarFoto = function(e) {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      fotoBase64 = ev.target.result;
+      document.getElementById('foto-placeholder').classList.add('hidden');
+      const preview = document.getElementById('foto-preview');
+      preview.src = fotoBase64; preview.classList.remove('hidden');
+      document.getElementById('btn-borrar-foto').classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  window.borrarFoto = function(e) {
+    e.stopPropagation(); fotoBase64 = null;
+    document.getElementById('foto-preview').classList.add('hidden');
+    document.getElementById('btn-borrar-foto').classList.add('hidden');
+    document.getElementById('foto-placeholder').classList.remove('hidden');
+    document.getElementById('input-camara').value = '';
+  }
+
+  // ── IA ANÁLISIS
+  window.analizarIA = async function() {
+    const barrio = document.getElementById('barrio').value;
+    const cat = document.getElementById('categoria').value;
+    const desc = document.getElementById('descripcion').value;
+    if (!desc || !barrio || !cat) { alert('Rellena barrio, categoría y descripción primero.'); return; }
+    const btn = document.getElementById('btn-ia');
+    btn.disabled = true;
+    document.getElementById('ia-icono').innerHTML = '<span class="spinner"></span>';
+    document.getElementById('ia-resultado').classList.remove('hidden');
+    document.getElementById('ia-texto').textContent = 'Analizando...';
+    try {
+      const res = await fetch(WORKER_URL, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514', max_tokens: 600,
+          messages: [{ role: 'user', content: `Eres el asistente de José Blas Díaz Bolaños, concejal de Unidos por Gran Canaria en Gáldar. Queja vecinal — Barrio: ${barrio}, Categoría: ${cat}, Descripción: "${desc}". Responde SOLO JSON: {"urgencia":"alta/media/baja","resumen":"1 frase","accion_pleno":"pregunta concreta para el pleno"}` }]
+        })
+      });
+      const data = await res.json();
+      const json = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
+      const col = json.urgencia==='alta'?'#E24B4A':json.urgencia==='media'?'#E8650A':'#3B6D11';
+      document.getElementById('ia-texto').innerHTML = `
+        <div style="margin-bottom:6px"><span class="urgencia-badge" style="background:${col}20;color:${col}">URGENCIA ${json.urgencia.toUpperCase()}</span></div>
+        <div style="margin-bottom:8px;font-size:13px">${json.resumen}</div>
+        <div style="font-size:12px;color:#555;border-top:1px solid #dde;padding-top:8px"><strong>Para el pleno:</strong> ${json.accion_pleno}</div>`;
+    } catch(e) {
+      document.getElementById('ia-texto').textContent = 'Error al conectar. Comprueba tu conexión.';
+    }
+    btn.disabled = false;
+    document.getElementById('ia-icono').textContent = '✦';
+  }
+
+  // ── ENVIAR QUEJA
+  window.enviarQueja = async function() {
+    const barrio = document.getElementById('barrio').value;
+    const cat = document.getElementById('categoria').value;
+    const desc = document.getElementById('descripcion').value;
+    if (!barrio || !cat || !desc) { alert('Por favor rellena barrio, categoría y descripción.'); return; }
+    try {
+      const nombre = document.getElementById('nombre').value || 'Anónimo';
+      const docData = {
+        nombre, barrio, categoria: cat, descripcion: desc,
+        fechaTexto: new Date().toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'}),
+        fecha: new Date(), estado: 'nueva'
+      };
+      if (fotoBase64) docData.foto = fotoBase64;
+      await addDoc(collection(db, "quejas"), docData);
+
+      // Notificación Telegram al concejal
+      await enviarTelegram(barrio, cat, nombre, desc);
+
+      document.getElementById('formulario').classList.add('hidden');
+      document.getElementById('enviada-ok').classList.remove('hidden');
+    } catch(e) {
+      alert('Error al enviar. Comprueba tu conexión.');
+    }
+  }
+
+  window.nuevaQueja = function() {
+    document.getElementById('formulario').classList.remove('hidden');
+    document.getElementById('enviada-ok').classList.add('hidden');
+    document.getElementById('ia-resultado').classList.add('hidden');
+    ['nombre','barrio','categoria','descripcion'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+    fotoBase64 = null;
+    document.getElementById('foto-preview').classList.add('hidden');
+    document.getElementById('btn-borrar-foto').classList.add('hidden');
+    document.getElementById('foto-placeholder').classList.remove('hidden');
+  }
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
