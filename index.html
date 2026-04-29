@@ -447,5 +447,51 @@
 
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 </script>
+
+<script>
+// Funciones de voz para sugerencias - script normal (no module)
+function crearVozInstancia(btnId, statusId, campoId, continuo) {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var btn = document.getElementById(btnId);
+  var status = document.getElementById(statusId);
+  var campo = document.getElementById(campoId);
+  if(!btn || !SR) { alert('Usa Chrome en Android para el microfono.'); return; }
+  if(btn.dataset.grabando === '1') {
+    btn.dataset.grabando = '0';
+    if(btn._rec) btn._rec.abort();
+    btn.classList.remove('grabando');
+    if(status) status.classList.add('hidden');
+    return;
+  }
+  btn.dataset.grabando = '1';
+  btn.classList.add('grabando');
+  if(status) status.classList.remove('hidden');
+  function escuchar() {
+    if(btn.dataset.grabando !== '1') return;
+    var r = new SR();
+    btn._rec = r;
+    r.lang='es-ES'; r.continuous=false; r.interimResults=false; r.maxAlternatives=1;
+    r.onresult=function(e){
+      if(e.results.length>0){
+        var t=e.results[0][0].transcript.trim();
+        t=t.charAt(0).toUpperCase()+t.slice(1);
+        campo.value=campo.value.trim()?(campo.value.trim()+' '+t):t;
+      }
+    };
+    r.onerror=function(e){
+      if(e.error==='no-speech'&&continuo&&btn.dataset.grabando==='1'){escuchar();}
+      else{btn.dataset.grabando='0';btn.classList.remove('grabando');if(status)status.classList.add('hidden');}
+    };
+    r.onend=function(){
+      if(continuo&&btn.dataset.grabando==='1')escuchar();
+      else{btn.dataset.grabando='0';btn.classList.remove('grabando');if(status)status.classList.add('hidden');}
+    };
+    r.start();
+  }
+  escuchar();
+}
+window.toggleVozSugNombre = function() { crearVozInstancia('btn-mic-sug-nombre','voz-status-sug-nombre','sug-nombre',false); };
+window.toggleVozSugTexto = function() { crearVozInstancia('btn-mic-sug-texto','voz-status-sug-texto','sug-texto',true); };
+</script>
 </body>
 </html>
