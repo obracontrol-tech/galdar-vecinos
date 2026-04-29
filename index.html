@@ -185,7 +185,7 @@
       <div class="sugerencia-banner">
         <div class="sugerencia-banner-titulo">💡 ¿Tienes una idea para Gáldar?</div>
         <div class="sugerencia-banner-sub">Comparte tus propuestas, mejoras o recomendaciones para el municipio</div>
-        <button class="btn-sugerencia" onclick="mostrarFormSugerencia()">✍️ Enviar sugerencia o mejora</button>
+        <button class="btn-sugerencia" id="btn-abrir-sug">✍️ Enviar sugerencia o mejora</button>
       </div>
 
       <!-- Formulario sugerencia (oculto inicialmente) -->
@@ -224,7 +224,7 @@
           <label>Tu idea o sugerencia *</label>
           <div class="textarea-wrapper">
             <textarea id="sug-texto" placeholder="Ej. Sería bueno tener más bancos en el parque de la plaza, o mejorar el alumbrado en la calle..." oninput="capitalizarCampo(this)"></textarea>
-            <button class="btn-mic" id="btn-mic-sug" onclick="toggleVozSugerencia()" title="Dictar sugerencia">
+            <button class="btn-mic" id="btn-mic-sug-click" title="Dictar sugerencia">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/>
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -235,7 +235,7 @@
           <div id="voz-status-sug" class="voz-status hidden"><span class="voz-dot"></span> Escuchando... habla ahora</div>
         </div>
 
-        <button class="btn-sugerencia" onclick="enviarSugerencia()">💡 Enviar mi sugerencia</button>
+        <button class="btn-sugerencia" id="btn-enviar-sug">💡 Enviar mi sugerencia</button>
       </div>
       <!-- fin formulario sugerencia -->
 
@@ -370,7 +370,7 @@
     if (!SR) { alert('Usa Chrome en Android para el micrófono.'); return; }
     if (grabandoSug) { grabandoSug = false; if (reconocimientoSug) reconocimientoSug.abort(); pararVozSug(); return; }
     grabandoSug = true;
-    const btn = document.getElementById('btn-mic-sug');
+    const btn = document.getElementById("btn-mic-sug-click");
     const status = document.getElementById('voz-status-sug');
     const textarea = document.getElementById('sug-texto');
     btn.classList.add('grabando');
@@ -541,7 +541,10 @@
     document.getElementById('foto-placeholder').classList.remove('hidden');
   }
 
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+  document.getElementById("btn-abrir-sug").addEventListener("click", mostrarFormSugerencia);
+  document.getElementById("btn-enviar-sug").addEventListener("click", enviarSugerencia);
+  document.getElementById("btn-mic-sug-click").addEventListener("click", toggleVozSugerencia);
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
 </script>
 </body>
 </html>
