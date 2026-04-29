@@ -55,30 +55,43 @@
 
       <div class="campo">
         <label>Barrio o zona *</label>
-                <select id="barrio">
-          <option value="">Selecciona tu barrio...</option>
-          <optgroup label="🏖️ Costa">
-            <option>Puerto de Sardina</option>
-            <option>El Agujero</option>
-            <option>La Guancha</option>
-          </optgroup>
-          <optgroup label="🏘️ Urbana">
-            <option>Gáldar Casco</option>
-            <option>San Isidro</option>
-            <option>Barrial</option>
-            <option>Marmolejos</option>
-            <option>Los Quintanas - Piso Firme</option>
-          </optgroup>
-          <optgroup label="🌿 Medianías">
-            <option>Hoya de Pineda</option>
-            <option>Saucillo</option>
-            <option>Juncalillo</option>
-          </optgroup>
-          <optgroup label="⛰️ Cumbre">
-            <option>Caideros</option>
-            <option>Fagajesto</option>
-          </optgroup>
-        </select>
+        <input type="hidden" id="barrio" value="">
+        <div id="barrio-selector">
+          <div class="zona-grupo">
+            <div class="zona-label" style="color:#0077CC">🌊 Costa</div>
+            <div class="zona-chips">
+              <button type="button" class="barrio-btn" data-barrio="Puerto de Sardina" data-color="#0077CC">Puerto de Sardina</button>
+              <button type="button" class="barrio-btn" data-barrio="El Agujero" data-color="#0077CC">El Agujero</button>
+              <button type="button" class="barrio-btn" data-barrio="La Guancha" data-color="#0077CC">La Guancha</button>
+            </div>
+          </div>
+          <div class="zona-grupo">
+            <div class="zona-label" style="color:#FF9900">🏠 Urbana</div>
+            <div class="zona-chips">
+              <button type="button" class="barrio-btn" data-barrio="Gáldar Casco" data-color="#FF9900">Gáldar Casco</button>
+              <button type="button" class="barrio-btn" data-barrio="San Isidro" data-color="#FF9900">San Isidro</button>
+              <button type="button" class="barrio-btn" data-barrio="Barrial" data-color="#FF9900">Barrial</button>
+              <button type="button" class="barrio-btn" data-barrio="Marmolejos" data-color="#FF9900">Marmolejos</button>
+              <button type="button" class="barrio-btn" data-barrio="Los Quintanas - Piso Firme" data-color="#FF9900">Los Quintanas</button>
+            </div>
+          </div>
+          <div class="zona-grupo">
+            <div class="zona-label" style="color:#33AA33">🌿 Medianías</div>
+            <div class="zona-chips">
+              <button type="button" class="barrio-btn" data-barrio="Hoya de Pineda" data-color="#33AA33">Hoya de Pineda</button>
+              <button type="button" class="barrio-btn" data-barrio="Saucillo" data-color="#33AA33">Saucillo</button>
+              <button type="button" class="barrio-btn" data-barrio="Juncalillo" data-color="#33AA33">Juncalillo</button>
+            </div>
+          </div>
+          <div class="zona-grupo">
+            <div class="zona-label" style="color:#663399">⛰️ Cumbre</div>
+            <div class="zona-chips">
+              <button type="button" class="barrio-btn" data-barrio="Caideros" data-color="#663399">Caideros</button>
+              <button type="button" class="barrio-btn" data-barrio="Fagajesto" data-color="#663399">Fagajesto</button>
+            </div>
+          </div>
+        </div>
+        <div id="barrio-error">Por favor selecciona tu barrio</div>
       </div>
 
       <div class="campo">
@@ -331,7 +344,7 @@
     const barrio = document.getElementById('barrio').value;
     const cat = document.getElementById('categoria').value;
     const desc = document.getElementById('descripcion').value;
-    if (!barrio || !cat || !desc) { alert('Por favor rellena barrio, categoría y descripción.'); return; }
+    if(!barrio){document.getElementById('barrio-error').style.display='block';return;}if(!cat||!desc){alert('Por favor rellena categoría y descripción.');return;}
     try {
       const nombre = document.getElementById('nombre').value || 'Anónimo';
       const docData = {
