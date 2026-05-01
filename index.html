@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Gáldar Vecinos — Quejas Ciudadanas</title>
+<meta name="theme-color" content="#1a5276">
+<link rel="manifest" href="manifest.json">
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root {
+  --azul: #1a5276;
+  --azul-claro: #2e86c1;
+  --verde: #1e8449;
+  --rojo: #c0392b;
+  --naranja: #e67e22;
+  --gris: #f4f6f7;
+  --texto: #2c3e50;
+  --sombra: 0 2px 12px rgba(0,0,0,0.12);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', sans-serif; background: var(--gris); color: var(--texto); min-height: 100vh; }
+
+/* CABECERA */
+header {
+  background: linear-gradient(135deg, var(--azul), var(--azul-claro));
+  color: white; padding: 16px 20px;
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: var(--sombra); position: sticky; top: 0; z-index: 100;
+}
+.logo-escudo { font-size: 36px; }
+.header-txt h1 { font-size: 18px; font-weight: 700; }
+.header-txt p { font-size: 12px; opacity: 0.85; }
+
+/* TABS */
+.tabs {
+  display: flex; background: white;
+  border-bottom: 3px solid var(--azul-claro);
+  overflow-x: auto; position: sticky; top: 68px; z-index: 90;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.tab-btn {
+  flex: 1; min-width: 90px; padding: 12px 8px;
+  border: none; background: none; cursor: pointer;
+  font-size: 11px; font-weight: 600; color: #666;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  transition: all 0.2s; border-bottom: 3px solid transparent; margin-bottom: -3px;
+}
+.tab-btn i { font-size: 18px; }
+.tab-btn.active { color: var(--azul-claro); border-bottom-color: var(--azul-claro); }
+
+/* CONTENIDO */
+.tab-content { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
+.tab-content.active { display: block; }
+
+/* TARJETAS */
+.card {
+  background: white; border-radius: 12px; padding: 20px;
+  box-shadow: var(--sombra); margin-bottom: 16px;
+}
+.card-title {
+  font-size: 15px; font-weight: 700; color: var(--azul);
+  margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+}
+
+/* FORMULARIO */
+.form-group { margin-bottom: 14px; }
+label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: var(--texto); }
+select, textarea, input[type=text] {
+  width: 100%; padding: 11px 13px; border: 1.5px solid #d0d7de;
+  border-radius: 8px; font-size: 14px; background: white;
+  font-family: inherit; transition: border-color 0.2s;
+}
+select:focus, textarea:focus, input:focus {
+  outline: none; border-color: var(--azul-claro);
+}
+textarea { min-height: 90px; resize: vertical; }
+
+/* BOTONES VOZ */
+.btn-voz {
+  background: var(--azul); color: white; border: none;
+  border-radius: 6px; padding: 8px 12px; font-size: 13px;
+  cursor: pointer; margin-top: 5px; display: flex; align-items: center; gap: 6px;
+}
+.btn-voz.grabando { background: var(--rojo); animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+/* BOTÓN PRINCIPAL */
+.btn-primary {
+  width: 100%; padding: 15px; background: linear-gradient(135deg, var(--azul), var(--azul-claro));
+  color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+  box-shadow: 0 4px 12px rgba(30,130,200,0.3); transition: transform 0.15s;
+}
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { background: #aaa; box-shadow: none; cursor: not-allowed; }
+
+/* CÁMARA */
+.foto-preview { width: 100%; border-radius: 8px; margin-top: 10px; display: none; }
+.btn-camara {
+  width: 100%; padding: 12px; background: #ecf0f1; border: 2px dashed #bdc3c7;
+  border-radius: 8px; cursor: pointer; font-size: 14px; color: #666;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all 0.2s;
+}
+.btn-camara:hover { background: #d5e8f0; border-color: var(--azul-claro); }
+
+/* GPS */
+.gps-info {
+  background: #eafaf1; border: 1.5px solid #a9dfbf; border-radius: 8px;
+  padding: 10px 14px; font-size: 13px; color: var(--verde); margin-top: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.gps-error { background: #fef9e7; border-color: #f9ca24; color: #d35400; }
+
+/* ALERTA BARRIO */
+.alerta-barrio {
+  background: #fef9e7; border-left: 4px solid var(--naranja);
+  border-radius: 6px; padding: 10px 14px; font-size: 13px;
+  color: #7d6608; margin-top: 8px; display: none;
+}
+
+/* ESTADO ENVÍO */
+.estado-envio {
+  text-align: center; padding: 20px; border-radius: 10px;
+  margin-top: 10px; display: none;
+}
+.estado-ok { background: #eafaf1; color: var(--verde); }
+.estado-error { background: #fdf2f2; color: var(--rojo); }
+
+/* ESTADÍSTICAS */
+.stats-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;
+}
+.stat-box {
+  background: white; border-radius: 10px; padding: 16px; text-align: center;
+  box-shadow: var(--sombra);
+}
+.stat-num { font-size: 28px; font-weight: 800; color: var(--azul-claro); }
+.stat-label { font-size: 12px; color: #666; margin-top: 3px; }
+
+/* IDEAS */
+.idea-card {
+  background: white; border-radius: 10px; padding: 16px;
+  box-shadow: var(--sombra); margin-bottom: 12px; border-left: 4px solid var(--azul-claro);
+}
+.btn-social {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 13px 16px; border: none; border-radius: 8px;
+  font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 10px;
+  transition: transform 0.15s;
+}
+.btn-social:active { transform: scale(0.97); }
+.btn-whatsapp { background: #25d366; color: white; }
+.btn-facebook { background: #1877f2; color: white; }
+.btn-pleno { background: var(--azul); color: white; }
+
+/* CONTACTOS EMERGENCIA */
+.contacto-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px; background: white; border-radius: 10px;
+  box-shadow: var(--sombra); margin-bottom: 10px; text-decoration: none;
+  color: var(--texto); transition: transform 0.15s;
+}
+.contacto-item:active { transform: scale(0.98); }
+.contacto-icono {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.ci-rojo { background: #fdecea; color: var(--rojo); }
+.ci-azul { background: #e8f4fd; color: var(--azul-claro); }
+.ci-verde { background: #eafaf1; color: var(--verde); }
+.contacto-info strong { display: block; font-size: 14px; font-weight: 700; }
+.contacto-info span { font-size: 12px; color: #666; }
+
+/* MAPA CALOR */
+#mapaCalor { width: 100%; height: 350px; border-radius: 10px; overflow: hidden; }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  background: #2c3e50; color: white; padding: 12px 24px; border-radius: 25px;
+  font-size: 14px; font-weight: 600; z-index: 999; display: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+/* NAV BOTTOM */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: white; border-top: 1px solid #e0e0e0;
+  display: flex; padding: 6px 0; z-index: 90;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+}
+.bottom-nav .tab-btn { font-size: 10px; }
+body { padding-bottom: 70px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-escudo">🏛️</div>
+  <div class="header-txt">
+    <h1>Gáldar Ciudadano</h1>
+    <p>Participa · Informa · Mejora tu municipio</p>
+  </div>
+</header>
+
+<!-- TABS SUPERIORES -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="mostrarTab('quejas')" id="tb-quejas">
+    <i class="fas fa-exclamation-triangle"></i>Queja
+  </button>
+  <button class="tab-btn" onclick="mostrarTab('mapa')" id="tb-mapa">
+    <i class="fas fa-map-marked-alt"></i>Mapa
+  </button>
+  <button class="tab-btn" onclick="mostrarTab('stats')" id="tb-stats">
+    <i class="fas fa-chart-bar"></i>Estadísticas
+  </button>
+  <button class="tab-btn" onclick="mostrarTab('ideas')" id="tb-ideas">
+    <i class="fas fa-lightbulb"></i>Ideas
+  </button>
+  <button class="tab-btn" onclick="mostrarTab('contactos')" id="tb-contactos">
+    <i class="fas fa-phone"></i>Contactos
+  </button>
+</div>
+
+<!-- ═══ TAB: ENVIAR QUEJA ═══ -->
+<div class="tab-content active" id="tab-quejas">
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-map-marker-alt"></i> Ubicación de tu queja</div>
+
+    <div class="form-group">
+      <label>Barrio / Zona</label>
+      <select id="selBarrio" onchange="checkAlertaBarrio()">
+        <option value="">— Selecciona tu barrio —</option>
+        <optgroup label="🏙️ Casco Urbano">
+          <option>Centro</option><option>El Calvario</option><option>La Montaña</option>
+          <option>Becerril</option><option>Palma de Rojas</option><option>Cañada Honda</option>
+          <option>Barrial</option><option>Nido Cuervo</option><option>Los Quintana</option>
+          <option>La Enconada</option><option>Marmolejo</option><option>Majadilla</option>
+          <option>Taya</option><option>Audiencia</option><option>Coruña</option>
+          <option>Las Canteras</option><option>San Sebastián</option><option>El Burrero</option>
+          <option>Lomo de San Antón</option><option>Los Llanos</option>
+        </optgroup>
+        <optgroup label="🏖️ Costa">
+          <option>El Agujero</option><option>Sardina del Norte</option>
+          <option>Puerto de Sardina</option><option>Caleta de Arriba</option>
+          <option>Caleta de Abajo</option><option>El Sobradillo</option>
+        </optgroup>
+        <optgroup label="🌿 Medianías">
+          <option>San Isidro</option><option>Hoya de Pineda</option><option>Anzofé</option>
+          <option>Piso Firme</option><option>Las Rosas</option>
+          <option>El Roque</option><option>Las Majadillas</option>
+        </optgroup>
+        <optgroup label="⛰️ Interior">
+          <option>Juncalillo</option><option>Barranco Hondo</option><option>Tablado</option>
+          <option>Fagajesto</option><option>Caideros</option><option>Saucillo</option>
+        </optgroup>
+      </select>
+      <div class="alerta-barrio" id="alertaBarrio">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="textoAlerta"></span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Calle / Dirección exacta (opcional)</label>
+      <input type="text" id="calle" placeholder="Ej: Calle Real, 12 / Frente al parque...">
+    </div>
+
+    <button class="btn-camara" onclick="activarGPS()">
+      <i class="fas fa-crosshairs"></i> Capturar mi ubicación GPS
+    </button>
+    <div class="gps-info" id="gpsInfo" style="display:none">
+      <i class="fas fa-check-circle"></i>
+      <span id="gpsTexto">Ubicación capturada</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-tags"></i> Tipo de incidencia</div>
+    <div class="form-group">
+      <select id="selCategoria" onchange="actualizarSubcats()">
+        <option value="">— Selecciona categoría —</option>
+        <option value="limpieza">🗑️ Limpieza y residuos</option>
+        <option value="iluminacion">💡 Alumbrado público</option>
+        <option value="vias">🛣️ Vías y pavimento</option>
+        <option value="agua">💧 Agua y alcantarillado</option>
+        <option value="zonas_verdes">🌳 Parques y jardines</option>
+        <option value="seguridad">🚨 Seguridad ciudadana</option>
+        <option value="ruido">🔊 Ruido y convivencia</option>
+        <option value="edificios">🏚️ Edificios y solares</option>
+        <option value="transporte">🚌 Transporte y tráfico</option>
+        <option value="otros">📋 Otros</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <select id="selSubcat">
+        <option value="">— Primero elige categoría —</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Urgencia</label>
+      <select id="selUrgencia">
+        <option value="normal">⚪ Normal</option>
+        <option value="urgente">🟡 Urgente</option>
+        <option value="muy_urgente">🔴 Muy urgente</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-comment-alt"></i> Descripción</div>
+    <div class="form-group">
+      <textarea id="descripcion" placeholder="Describe el problema con el mayor detalle posible..."></textarea>
+      <button class="btn-voz" id="btnVoz" ontouchstart="iniciarVoz(event)" onclick="iniciarVoz(event)">
+        <i class="fas fa-microphone"></i> Hablar descripción
+      </button>
+    </div>
+
+    <div class="form-group">
+      <label>Foto del problema (opcional)</label>
+      <input type="file" id="fotoInput" accept="image/*" capture="environment" style="display:none" onchange="previsualizarFoto(event)">
+      <div class="btn-camara" onclick="document.getElementById('fotoInput').click()">
+        <i class="fas fa-camera"></i> Hacer foto o adjuntar imagen
+      </div>
+      <img id="fotoPreview" class="foto-preview" alt="Vista previa">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-user"></i> Tus datos (opcional)</div>
+    <div class="form-group">
+      <input type="text" id="nombre" placeholder="Tu nombre (opcional, para seguimiento)">
+    </div>
+    <div class="form-group">
+      <input type="text" id="telefono" placeholder="Teléfono o email (opcional)">
+    </div>
+    <p style="font-size:11px;color:#888;margin-top:4px">
+      <i class="fas fa-lock"></i> Tus datos son confidenciales. Solo se usan para el seguimiento de tu queja.
+    </p>
+  </div>
+
+  <button class="btn-primary" id="btnEnviar" onclick="enviarQueja()">
+    <i class="fas fa-paper-plane"></i> Enviar queja al concejal
+  </button>
+
+  <div class="estado-envio estado-ok" id="estadoOk">
+    <div style="font-size:40px">✅</div>
+    <div style="font-size:18px;font-weight:700;margin-top:8px">¡Queja enviada!</div>
+    <div style="font-size:13px;margin-top:6px;opacity:0.8">José Blas la recibirá en su panel. Gracias por participar.</div>
+    <button onclick="nuevaQueja()" style="margin-top:14px;padding:10px 24px;border-radius:20px;border:none;background:var(--verde);color:white;font-weight:700;cursor:pointer;font-size:14px">
+      <i class="fas fa-plus"></i> Enviar otra queja
+    </button>
+  </div>
+
+  <div class="estado-envio estado-error" id="estadoError">
+    <div style="font-size:40px">❌</div>
+    <div style="font-size:16px;font-weight:700;margin-top:8px">Error al enviar</div>
+    <div style="font-size:13px;margin-top:6px;opacity:0.8" id="textoError">Comprueba tu conexión e inténtalo de nuevo.</div>
+  </div>
+</div>
+
+<!-- ═══ TAB: MAPA ═══ -->
+<div class="tab-content" id="tab-mapa">
+  <div class="card">
+    <div class="card-title"><i class="fas fa-fire"></i> Mapa de incidencias en Gáldar</div>
+    <p style="font-size:13px;color:#666;margin-bottom:12px">Las zonas más rojas tienen mayor concentración de quejas.</p>
+    <div id="mapaCalor"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="fas fa-info-circle"></i> Leyenda</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px">
+      <div><span style="color:var(--rojo)">●</span> Alta concentración</div>
+      <div><span style="color:var(--naranja)">●</span> Media concentración</div>
+      <div><span style="color:#27ae60">●</span> Baja concentración</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB: ESTADÍSTICAS ═══ -->
+<div class="tab-content" id="tab-stats">
+  <div class="stats-grid">
+    <div class="stat-box">
+      <div class="stat-num" id="statTotal">—</div>
+      <div class="stat-label">Total quejas</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" id="statPendientes">—</div>
+      <div class="stat-label">Pendientes</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" id="statResueltas">—</div>
+      <div class="stat-label">Resueltas</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" id="statHoy">—</div>
+      <div class="stat-label">Hoy</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-chart-pie"></i> Por categoría</div>
+    <div id="statsCategorias">
+      <div style="text-align:center;padding:20px;color:#aaa">Cargando estadísticas...</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-map-pin"></i> Por barrio (Top 5)</div>
+    <div id="statsBarrios">
+      <div style="text-align:center;padding:20px;color:#aaa">Cargando...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB: IDEAS ═══ -->
+<div class="tab-content" id="tab-ideas">
+  <div class="card">
+    <div class="card-title"><i class="fas fa-lightbulb"></i> Propuestas y sugerencias</div>
+    <p style="font-size:13px;color:#555;margin-bottom:16px">
+      ¿Tienes una idea para mejorar Gáldar? ¡Compártela con José Blas y con todos los vecinos!
+    </p>
+
+    <div class="form-group">
+      <textarea id="idea" placeholder="Escribe tu propuesta o sugerencia..."></textarea>
+      <button class="btn-voz" id="btnVozIdea" ontouchstart="iniciarVozIdea(event)" onclick="iniciarVozIdea(event)">
+        <i class="fas fa-microphone"></i> Hablar propuesta
+      </button>
+    </div>
+
+    <button class="btn-social btn-whatsapp" onclick="compartirWhatsApp()">
+      <i class="fab fa-whatsapp"></i> Compartir por WhatsApp
+    </button>
+    <button class="btn-social btn-facebook" onclick="compartirFacebook()">
+      <i class="fab fa-facebook"></i> Publicar en Facebook
+    </button>
+    <button class="btn-social btn-pleno" onclick="enviarAPleno()">
+      <i class="fas fa-landmark"></i> Proponer para el próximo Pleno
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-star"></i> Ideas destacadas</div>
+    <div id="listaIdeas">
+      <div style="text-align:center;padding:20px;color:#aaa">
+        <i class="fas fa-spinner fa-spin"></i> Cargando ideas...
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB: CONTACTOS ═══ -->
+<div class="tab-content" id="tab-contactos">
+  <div class="card" style="background: linear-gradient(135deg,#1a5276,#2e86c1);color:white;padding:16px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="font-size:40px">👨‍💼</div>
+      <div>
+        <div style="font-weight:700;font-size:16px">José Blas Díaz Bolaños</div>
+        <div style="font-size:12px;opacity:0.85">Concejal de UxGC · Gáldar, Gran Canaria</div>
+        <div style="font-size:11px;opacity:0.7;margin-top:2px">Oposición · Portavoz Unidos por Gran Canaria</div>
+      </div>
+    </div>
+  </div>
+
+  <a href="tel:112" class="contacto-item">
+    <div class="contacto-icono ci-rojo"><i class="fas fa-ambulance"></i></div>
+    <div class="contacto-info">
+      <strong>Emergencias</strong><span>112 · Urgencias, bomberos, policía</span>
+    </div>
+  </a>
+  <a href="tel:092" class="contacto-item">
+    <div class="contacto-icono ci-azul"><i class="fas fa-shield-alt"></i></div>
+    <div class="contacto-info">
+      <strong>Policía Local Gáldar</strong><span>092</span>
+    </div>
+  </a>
+  <a href="tel:928890000" class="contacto-item">
+    <div class="contacto-icono ci-verde"><i class="fas fa-building"></i></div>
+    <div class="contacto-info">
+      <strong>Ayuntamiento de Gáldar</strong><span>928 89 00 00</span>
+    </div>
+  </a>
+  <a href="tel:010" class="contacto-item">
+    <div class="contacto-icono ci-azul"><i class="fas fa-headset"></i></div>
+    <div class="contacto-info">
+      <strong>Información Municipal</strong><span>010 · Consultas del Ayuntamiento</span>
+    </div>
+  </a>
+  <a href="https://wa.me/34000000000" class="contacto-item" target="_blank">
+    <div class="contacto-icono ci-verde"><i class="fab fa-whatsapp"></i></div>
+    <div class="contacto-info">
+      <strong>WhatsApp José Blas</strong><span>Contáctale directamente</span>
+    </div>
+  </a>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════
+// FIREBASE CONFIG
+// ══════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyC9HkQ9RLXQ3hVYNdFvTHhSGknC8sXKDkU",
+  authDomain: "galdar-quejas.firebaseapp.com",
+  databaseURL: "https://galdar-quejas-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "galdar-quejas",
+  storageBucket: "galdar-quejas.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abcdef123456"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const storage = firebase.storage();
+
+// ══════════════════════════════════
+// VARIABLES GLOBALES
+// ══════════════════════════════════
+let gpsLat = null, gpsLng = null;
+let fotoBase64 = null;
+let reconocimiento = null;
+let grabandoVoz = false;
+let mapaLeaflet = null;
+
+// ALERTAS POR BARRIO
+const alertasBarrio = {
+  "Centro": "⚠️ Zona con alta incidencia de iluminación deficiente. Revisa el estado del alumbrado.",
+  "El Calvario": "⚠️ Zona con quejas frecuentes de limpieza en contenedores.",
+  "Sardina del Norte": "⚠️ Zona costera: verifica el estado de accesos y limpieza de playas.",
+  "Puerto de Sardina": "⚠️ Zona portuaria con incidencias de limpieza y mantenimiento recurrentes.",
+  "Juncalillo": "⚠️ Zona rural: incidencias frecuentes en caminos y carreteras.",
+  "Caideros": "⚠️ Zona con accesos en mal estado reportados frecuentemente."
+};
+
+// SUBCATEGORÍAS
+const subcats = {
+  limpieza: ["Contenedores llenos","Basura en la vía","Solares con residuos","Limpieza de playas","Recogida selectiva"],
+  iluminacion: ["Farola apagada","Cable peligroso","Falta iluminación zona","Parpadeo/avería"],
+  vias: ["Bache en calzada","Acera rota","Señalización dañada","Obstáculo en la vía","Pintadas/grafitis"],
+  agua: ["Fuga de agua","Alcantarilla atascada","Agua en la calzada","Falta presión"],
+  zonas_verdes: ["Poda necesaria","Parque en mal estado","Riego deficiente","Zona verde sucia"],
+  seguridad: ["Actividad sospechosa","Zona mal iluminada","Pintadas","Vehículo abandonado"],
+  ruido: ["Música alta","Obras nocturnas","Locales nocturnos","Ruido de tráfico"],
+  edificios: ["Solar sin vallar","Edificio en ruinas","Pintadas","Riesgo de derrumbe"],
+  transporte: ["Parada en mal estado","Semáforo averiado","Señal caída","Aparcamiento ilegal"],
+  otros: ["Otro tipo de queja"]
+};
+
+// ══════════════════════════════════
+// TABS
+// ══════════════════════════════════
+function mostrarTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  document.getElementById('tb-' + id).classList.add('active');
+  if (id === 'mapa') iniciarMapa();
+  if (id === 'stats') cargarEstadisticas();
+  if (id === 'ideas') cargarIdeas();
+}
+
+// ══════════════════════════════════
+// GPS
+// ══════════════════════════════════
+function activarGPS() {
+  if (!navigator.geolocation) {
+    mostrarToast('GPS no disponible en este dispositivo');
+    return;
+  }
+  mostrarToast('Obteniendo ubicación...');
+  navigator.geolocation.getCurrentPosition(pos => {
+    gpsLat = pos.coords.latitude;
+    gpsLng = pos.coords.longitude;
+    document.getElementById('gpsInfo').style.display = 'flex';
+    document.getElementById('gpsTexto').textContent =
+      `📍 ${gpsLat.toFixed(5)}, ${gpsLng.toFixed(5)} (±${Math.round(pos.coords.accuracy)}m)`;
+    mostrarToast('✅ Ubicación capturada');
+  }, err => {
+    document.getElementById('gpsInfo').className = 'gps-info gps-error';
+    document.getElementById('gpsInfo').style.display = 'flex';
+    document.getElementById('gpsTexto').textContent = 'No se pudo obtener la ubicación. Activa el GPS.';
+  });
+}
+
+// ══════════════════════════════════
+// ALERTA BARRIO
+// ══════════════════════════════════
+function checkAlertaBarrio() {
+  const barrio = document.getElementById('selBarrio').value;
+  const div = document.getElementById('alertaBarrio');
+  const txt = document.getElementById('textoAlerta');
+  if (alertasBarrio[barrio]) {
+    txt.textContent = alertasBarrio[barrio];
+    div.style.display = 'block';
+  } else {
+    div.style.display = 'none';
+  }
+}
+
+// ══════════════════════════════════
+// SUBCATEGORÍAS
+// ══════════════════════════════════
+function actualizarSubcats() {
+  const cat = document.getElementById('selCategoria').value;
+  const sel = document.getElementById('selSubcat');
+  sel.innerHTML = '<option value="">— Selecciona tipo —</option>';
+  if (subcats[cat]) {
+    subcats[cat].forEach(s => {
+      const o = document.createElement('option');
+      o.value = s; o.textContent = s;
+      sel.appendChild(o);
+    });
+  }
+}
+
+// ══════════════════════════════════
+// RECONOCIMIENTO VOZ
+// ══════════════════════════════════
+function iniciarVoz(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) { mostrarToast('Voz no disponible en este navegador'); return; }
+  if (grabandoVoz) { reconocimiento.stop(); return; }
+
+  reconocimiento = new SpeechRecognition();
+  reconocimiento.lang = 'es-ES';
+  reconocimiento.continuous = false;
+  reconocimiento.interimResults = false;
+
+  const btn = document.getElementById('btnVoz');
+  btn.classList.add('grabando');
+  btn.innerHTML = '<i class="fas fa-stop"></i> Detener';
+  grabandoVoz = true;
+
+  reconocimiento.onresult = e => {
+    const txt = e.results[0][0].transcript;
+    const campo = document.getElementById('descripcion');
+    campo.value = (campo.value ? campo.value + ' ' : '') + txt;
+  };
+  reconocimiento.onerror = () => mostrarToast('Error en reconocimiento de voz');
+  reconocimiento.onend = () => {
+    grabandoVoz = false;
+    btn.classList.remove('grabando');
+    btn.innerHTML = '<i class="fas fa-microphone"></i> Hablar descripción';
+  };
+  reconocimiento.start();
+}
+
+function iniciarVozIdea(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) { mostrarToast('Voz no disponible'); return; }
+
+  const r = new SpeechRecognition();
+  r.lang = 'es-ES';
+  r.onresult = e => {
+    const txt = e.results[0][0].transcript;
+    const campo = document.getElementById('idea');
+    campo.value = (campo.value ? campo.value + ' ' : '') + txt;
+  };
+  r.start();
+  mostrarToast('🎤 Escuchando...');
+}
+
+// ══════════════════════════════════
+// FOTO
+// ══════════════════════════════════
+function previsualizarFoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('fotoPreview').src = ev.target.result;
+    document.getElementById('fotoPreview').style.display = 'block';
+    fotoBase64 = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ══════════════════════════════════
+// ENVIAR QUEJA
+// ══════════════════════════════════
+async function enviarQueja() {
+  const barrio = document.getElementById('selBarrio').value;
+  const categoria = document.getElementById('selCategoria').value;
+  const descripcion = document.getElementById('descripcion').value.trim();
+
+  if (!barrio) { mostrarToast('⚠️ Selecciona el barrio'); return; }
+  if (!categoria) { mostrarToast('⚠️ Selecciona la categoría'); return; }
+  if (!descripcion) { mostrarToast('⚠️ Escribe una descripción'); return; }
+
+  const btn = document.getElementById('btnEnviar');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+  const queja = {
+    barrio,
+    calle: document.getElementById('calle').value,
+    categoria,
+    subcategoria: document.getElementById('selSubcat').value,
+    urgencia: document.getElementById('selUrgencia').value,
+    descripcion,
+    nombre: document.getElementById('nombre').value,
+    telefono: document.getElementById('telefono').value,
+    lat: gpsLat,
+    lng: gpsLng,
+    foto: fotoBase64 ? 'si' : 'no',
+    estado: 'pendiente',
+    timestamp: Date.now(),
+    fecha: new Date().toLocaleString('es-ES')
+  };
+
+  try {
+    await db.ref('quejas').push(queja);
+
+    // Notificación Telegram
+    try {
+      const msg = `🚨 *Nueva queja en Gáldar*\n\n📍 *${barrio}*${queja.calle ? ' - ' + queja.calle : ''}\n🏷️ ${categoria} ${queja.subcategoria ? '· ' + queja.subcategoria : ''}\n⚡ ${queja.urgencia}\n\n📝 ${descripcion.substring(0,200)}${descripcion.length > 200 ? '...' : ''}`;
+      await fetch(`https://api.telegram.org/bot7942127205:AAEr3B_6I8-DVwXxrxLhzMMmEMFX71FZnmo/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: '7284297044', text: msg, parse_mode: 'Markdown' })
+      });
+    } catch(e) { /* Telegram no crítico */ }
+
+    document.getElementById('estadoOk').style.display = 'block';
+    btn.style.display = 'none';
+  } catch(err) {
+    document.getElementById('estadoError').style.display = 'block';
+    document.getElementById('textoError').textContent = err.message;
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar queja al concejal';
+  }
+}
+
+function nuevaQueja() {
+  document.getElementById('estadoOk').style.display = 'none';
+  document.getElementById('btnEnviar').style.display = 'flex';
+  document.getElementById('btnEnviar').disabled = false;
+  document.getElementById('descripcion').value = '';
+  document.getElementById('selBarrio').value = '';
+  document.getElementById('selCategoria').value = '';
+  document.getElementById('nombre').value = '';
+  document.getElementById('telefono').value = '';
+  document.getElementById('fotoPreview').style.display = 'none';
+  document.getElementById('gpsInfo').style.display = 'none';
+  gpsLat = null; gpsLng = null; fotoBase64 = null;
+  window.scrollTo(0, 0);
+}
+
+// ══════════════════════════════════
+// MAPA LEAFLET
+// ══════════════════════════════════
+function iniciarMapa() {
+  if (mapaLeaflet) return;
+  const script = document.createElement('script');
+  script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+  document.head.appendChild(script);
+
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+  document.head.appendChild(link);
+
+  script.onload = () => {
+    mapaLeaflet = L.map('mapaCalor').setView([28.1500, -15.6400], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(mapaLeaflet);
+
+    db.ref('quejas').once('value', snap => {
+      const quejas = snap.val() || {};
+      Object.values(quejas).forEach(q => {
+        if (q.lat && q.lng) {
+          const color = q.urgencia === 'muy_urgente' ? 'red' :
+                        q.urgencia === 'urgente' ? 'orange' : 'blue';
+          L.circleMarker([q.lat, q.lng], {
+            radius: 10, fillColor: color, color: 'white',
+            weight: 2, opacity: 1, fillOpacity: 0.7
+          }).addTo(mapaLeaflet)
+            .bindPopup(`<b>${q.barrio}</b><br>${q.categoria}<br>${q.descripcion?.substring(0,80)}`);
+        }
+      });
+    });
+  };
+}
+
+// ══════════════════════════════════
+// ESTADÍSTICAS
+// ══════════════════════════════════
+function cargarEstadisticas() {
+  db.ref('quejas').once('value', snap => {
+    const quejas = Object.values(snap.val() || {});
+    const hoy = new Date().toLocaleDateString('es-ES');
+
+    document.getElementById('statTotal').textContent = quejas.length;
+    document.getElementById('statPendientes').textContent = quejas.filter(q => q.estado === 'pendiente').length;
+    document.getElementById('statResueltas').textContent = quejas.filter(q => q.estado === 'resuelto').length;
+    document.getElementById('statHoy').textContent = quejas.filter(q => q.fecha && q.fecha.startsWith(hoy)).length;
+
+    // Por categoría
+    const porCat = {};
+    quejas.forEach(q => { porCat[q.categoria] = (porCat[q.categoria] || 0) + 1; });
+    const catHTML = Object.entries(porCat).sort((a,b) => b[1]-a[1]).map(([cat, n]) => `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="flex:1;font-size:13px">${cat}</div>
+        <div style="width:${Math.round(n/quejas.length*100)}%;max-width:120px;height:8px;background:var(--azul-claro);border-radius:4px"></div>
+        <div style="font-size:13px;font-weight:700;min-width:24px">${n}</div>
+      </div>`).join('');
+    document.getElementById('statsCategorias').innerHTML = catHTML || '<p style="color:#aaa">Sin datos</p>';
+
+    // Por barrio top 5
+    const porBarrio = {};
+    quejas.forEach(q => { if(q.barrio) porBarrio[q.barrio] = (porBarrio[q.barrio] || 0) + 1; });
+    const barrioHTML = Object.entries(porBarrio).sort((a,b) => b[1]-a[1]).slice(0,5).map(([b, n], i) => `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="font-size:16px;min-width:24px">${['🥇','🥈','🥉','4️⃣','5️⃣'][i]}</div>
+        <div style="flex:1;font-size:13px">${b}</div>
+        <div style="font-size:14px;font-weight:700;color:var(--azul)">${n}</div>
+      </div>`).join('');
+    document.getElementById('statsBarrios').innerHTML = barrioHTML || '<p style="color:#aaa">Sin datos</p>';
+  });
+}
+
+// ══════════════════════════════════
+// IDEAS
+// ══════════════════════════════════
+function cargarIdeas() {
+  db.ref('ideas').orderByChild('timestamp').limitToLast(5).once('value', snap => {
+    const ideas = snap.val() || {};
+    const html = Object.values(ideas).reverse().map(i => `
+      <div class="idea-card">
+        <div style="font-size:14px">${i.texto}</div>
+        <div style="font-size:11px;color:#aaa;margin-top:6px">${i.fecha || ''}</div>
+      </div>`).join('');
+    document.getElementById('listaIdeas').innerHTML = html || '<p style="text-align:center;color:#aaa;padding:20px">Sé el primero en publicar una idea 💡</p>';
+  });
+}
+
+function compartirWhatsApp() {
+  const idea = document.getElementById('idea').value.trim();
+  if (!idea) { mostrarToast('Escribe tu idea primero'); return; }
+  guardarIdea(idea);
+  window.open(`https://wa.me/?text=${encodeURIComponent('💡 Propuesta para Gáldar:\n\n' + idea + '\n\nConcejalía UxGC · José Blas Díaz')}`, '_blank');
+}
+
+function compartirFacebook() {
+  const idea = document.getElementById('idea').value.trim();
+  if (!idea) { mostrarToast('Escribe tu idea primero'); return; }
+  guardarIdea(idea);
+  window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(window.location.href), '_blank');
+}
+
+function enviarAPleno() {
+  const idea = document.getElementById('idea').value.trim();
+  if (!idea) { mostrarToast('Escribe tu idea primero'); return; }
+  guardarIdea(idea, true);
+  mostrarToast('✅ Propuesta enviada al panel del concejal para el próximo pleno');
+}
+
+function guardarIdea(texto, parPleno = false) {
+  db.ref('ideas').push({
+    texto, parPleno,
+    fecha: new Date().toLocaleString('es-ES'),
+    timestamp: Date.now()
+  });
+  document.getElementById('idea').value = '';
+}
+
+// ══════════════════════════════════
+// TOAST
+// ══════════════════════════════════
+function mostrarToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+</script>
+</body>
+</html>
