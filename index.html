@@ -679,50 +679,54 @@ function actualizarSubcats() {
 // ══════════════════════════════════
 // RECONOCIMIENTO VOZ
 // ══════════════════════════════════
-function iniciarVoz(e) {
-  if (e) { e.preventDefault(); e.stopPropagation(); }
+function crearReconocimiento(campoId, btnId, labelParado, labelGrabando) {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) { mostrarToast('Voz no disponible en este navegador'); return; }
-  if (grabandoVoz) { reconocimiento.stop(); return; }
+  if (!SpeechRecognition) { mostrarToast('Voz no disponible en este navegador'); return null; }
 
-  reconocimiento = new SpeechRecognition();
-  reconocimiento.lang = 'es-ES';
-  reconocimiento.continuous = false;
-  reconocimiento.interimResults = false;
+  const r = new SpeechRecognition();
+  r.lang = 'es-ES';
+  r.continuous = false;
+  r.interimResults = false;
+  r.maxAlternatives = 1;
 
-  const btn = document.getElementById('btnVoz');
-  btn.classList.add('grabando');
-  btn.innerHTML = '<i class="fas fa-stop"></i> Detener';
-  grabandoVoz = true;
+  const btn = document.getElementById(btnId);
 
-  reconocimiento.onresult = e => {
-    const txt = e.results[0][0].transcript;
-    const campo = document.getElementById('descripcion');
-    campo.value = (campo.value ? campo.value + ' ' : '') + txt;
+  r.onstart = () => {
+    btn.classList.add('grabando');
+    btn.innerHTML = '<i class="fas fa-stop"></i> ' + labelGrabando;
+    grabandoVoz = true;
+    mostrarToast('🎤 Escuchando... habla ahora');
   };
-  reconocimiento.onerror = () => mostrarToast('Error en reconocimiento de voz');
-  reconocimiento.onend = () => {
+  r.onresult = ev => {
+    const txt = ev.results[0][0].transcript;
+    const campo = document.getElementById(campoId);
+    campo.value = (campo.value ? campo.value + ' ' : '') + txt;
+    mostrarToast('✅ ' + txt.substring(0,40) + (txt.length>40?'...':''));
+  };
+  r.onerror = ev => {
+    mostrarToast('Error: ' + (ev.error === 'no-speech' ? 'No se detectó voz' : ev.error));
+  };
+  r.onend = () => {
     grabandoVoz = false;
     btn.classList.remove('grabando');
-    btn.innerHTML = '<i class="fas fa-microphone"></i> Hablar descripción';
+    btn.innerHTML = '<i class="fas fa-microphone"></i> ' + labelParado;
+    reconocimiento = null;
   };
-  reconocimiento.start();
+  return r;
+}
+
+function iniciarVoz(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  if (grabandoVoz && reconocimiento) { reconocimiento.stop(); return; }
+  reconocimiento = crearReconocimiento('descripcion', 'btnVoz', 'Hablar descripción', 'Detener');
+  if (reconocimiento) reconocimiento.start();
 }
 
 function iniciarVozIdea(e) {
   if (e) { e.preventDefault(); e.stopPropagation(); }
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) { mostrarToast('Voz no disponible'); return; }
-
-  const r = new SpeechRecognition();
-  r.lang = 'es-ES';
-  r.onresult = e => {
-    const txt = e.results[0][0].transcript;
-    const campo = document.getElementById('idea');
-    campo.value = (campo.value ? campo.value + ' ' : '') + txt;
-  };
-  r.start();
-  mostrarToast('🎤 Escuchando...');
+  if (grabandoVoz && reconocimiento) { reconocimiento.stop(); return; }
+  reconocimiento = crearReconocimiento('idea', 'btnVozIdea', 'Hablar propuesta', 'Detener');
+  if (reconocimiento) reconocimiento.start();
 }
 
 // ══════════════════════════════════
