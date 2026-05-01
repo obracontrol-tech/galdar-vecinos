@@ -781,11 +781,15 @@ async function enviarQueja() {
     try {
       const tipoEmoji = {queja:'⚠️',sugerencia:'💡',denuncia:'🚨',felicitacion:'👍'};
       const msg = `${tipoEmoji[tipoSeleccionado]||'📢'} *${tipoSeleccionado.toUpperCase()} en Gáldar*\n\n📍 *${barrio}*${queja.calle ? ' - ' + queja.calle : ''}\n🏷️ ${categoria} ${queja.subcategoria ? '· ' + queja.subcategoria : ''}\n⚡ ${queja.urgencia}\n\n📝 ${descripcion.substring(0,200)}${descripcion.length > 200 ? '...' : ''}`;
-      await fetch(`https://api.telegram.org/bot7942127205:AAEr3B_6I8-DVwXxrxLhzMMmEMFX71FZnmo/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: '7284297044', text: msg, parse_mode: 'Markdown' })
-      });
+      const TOKEN = '8772067102:AAEY1iECbdTnZl9-5_KgvdT1ObqCosAzJUM';
+      const CHATS = ['8601457137', '8655270396'];
+      for (const chat_id of CHATS) {
+        await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id, text: msg, parse_mode: 'Markdown' })
+        });
+      }
     } catch(e) { /* Telegram no crítico */ }
 
     document.getElementById('estadoOk').style.display = 'block';
