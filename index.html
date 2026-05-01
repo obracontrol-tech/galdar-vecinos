@@ -79,7 +79,18 @@ select:focus, textarea:focus, input:focus {
 }
 textarea { min-height: 90px; resize: vertical; }
 
-/* BOTONES VOZ */
+/* TIPO COMUNICACIÓN */
+.tipo-btn {
+  border: 2px solid #d0d7de; border-radius: 10px; padding: 12px 8px;
+  text-align: center; cursor: pointer; background: white;
+  transition: all 0.2s;
+}
+.tipo-btn.active {
+  border-color: var(--azul-claro); background: #e8f4fd;
+}
+.tipo-btn:active { transform: scale(0.97); }
+
+/* TIPO COMUNICACIÓN */
 .btn-voz {
   background: var(--azul); color: white; border: none;
   border-radius: 6px; padding: 8px 12px; font-size: 13px;
@@ -232,7 +243,35 @@ body { padding-bottom: 70px; }
 <div class="tab-content active" id="tab-quejas">
 
   <div class="card">
-    <div class="card-title"><i class="fas fa-map-marker-alt"></i> Ubicación de tu queja</div>
+    <div class="card-title"><i class="fas fa-tag"></i> ¿Qué quieres comunicar?</div>
+    <div class="form-group">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="tipo-btn active" id="tipo-queja" onclick="selTipo('queja')">
+          <div style="font-size:22px">⚠️</div>
+          <div style="font-size:13px;font-weight:700;margin-top:4px">Queja</div>
+          <div style="font-size:10px;color:#666;margin-top:2px">Problema o incidencia</div>
+        </div>
+        <div class="tipo-btn" id="tipo-sugerencia" onclick="selTipo('sugerencia')">
+          <div style="font-size:22px">💡</div>
+          <div style="font-size:13px;font-weight:700;margin-top:4px">Sugerencia</div>
+          <div style="font-size:10px;color:#666;margin-top:2px">Idea de mejora</div>
+        </div>
+        <div class="tipo-btn" id="tipo-denuncia" onclick="selTipo('denuncia')">
+          <div style="font-size:22px">🚨</div>
+          <div style="font-size:13px;font-weight:700;margin-top:4px">Denuncia</div>
+          <div style="font-size:10px;color:#666;margin-top:2px">Irregularidad grave</div>
+        </div>
+        <div class="tipo-btn" id="tipo-felicitacion" onclick="selTipo('felicitacion')">
+          <div style="font-size:22px">👍</div>
+          <div style="font-size:13px;font-weight:700;margin-top:4px">Felicitación</div>
+          <div style="font-size:10px;color:#666;margin-top:2px">Algo bien hecho</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-map-marker-alt"></i> Ubicación</div>
 
     <div class="form-group">
       <label>Barrio / Zona</label>
@@ -333,16 +372,26 @@ body { padding-bottom: 70px; }
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-title"><i class="fas fa-user"></i> Tus datos (opcional)</div>
-    <div class="form-group">
-      <input type="text" id="nombre" placeholder="Tu nombre (opcional, para seguimiento)">
+  <div class="card" style="border-left:4px solid #e74c3c">
+    <div class="card-title"><i class="fas fa-user"></i> Tus datos
+      <span style="font-size:11px;font-weight:400;color:var(--rojo);margin-left:6px">— completamente opcionales</span>
+    </div>
+    <div style="background:#fdf2f2;border:1.5px solid #f1948a;border-radius:8px;padding:10px 14px;margin-bottom:14px">
+      <p style="font-size:12px;color:#c0392b;font-weight:600;display:flex;align-items:flex-start;gap:8px">
+        <i class="fas fa-shield-alt" style="margin-top:2px;flex-shrink:0"></i>
+        <span><strong>No estás obligado a identificarte.</strong> Tu queja será atendida igualmente de forma anónima. Estos datos son solo si quieres recibir respuesta o seguimiento.</span>
+      </p>
     </div>
     <div class="form-group">
-      <input type="text" id="telefono" placeholder="Teléfono o email (opcional)">
+      <label style="color:var(--rojo)">Nombre <span style="font-weight:400;font-size:11px">(opcional)</span></label>
+      <input type="text" id="nombre" placeholder="Déjalo vacío para ser anónimo/a">
     </div>
-    <p style="font-size:11px;color:#888;margin-top:4px">
-      <i class="fas fa-lock"></i> Tus datos son confidenciales. Solo se usan para el seguimiento de tu queja.
+    <div class="form-group">
+      <label style="color:var(--rojo)">Teléfono o email <span style="font-weight:400;font-size:11px">(opcional)</span></label>
+      <input type="text" id="telefono" placeholder="Solo si quieres que te contactemos">
+    </div>
+    <p style="font-size:11px;color:#888;margin-top:4px;display:flex;align-items:center;gap:6px">
+      <i class="fas fa-lock"></i> Si facilitas datos, son confidenciales y solo los verá el concejal José Blas.
     </p>
   </div>
 
@@ -528,6 +577,13 @@ let fotoBase64 = null;
 let reconocimiento = null;
 let grabandoVoz = false;
 let mapaLeaflet = null;
+let tipoSeleccionado = 'queja';
+
+function selTipo(tipo) {
+  tipoSeleccionado = tipo;
+  document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tipo-' + tipo).classList.add('active');
+}
 
 // ALERTAS POR BARRIO
 const alertasBarrio = {
@@ -701,6 +757,7 @@ async function enviarQueja() {
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
 
   const queja = {
+    tipo: tipoSeleccionado,
     barrio,
     calle: document.getElementById('calle').value,
     categoria,
@@ -722,7 +779,8 @@ async function enviarQueja() {
 
     // Notificación Telegram
     try {
-      const msg = `🚨 *Nueva queja en Gáldar*\n\n📍 *${barrio}*${queja.calle ? ' - ' + queja.calle : ''}\n🏷️ ${categoria} ${queja.subcategoria ? '· ' + queja.subcategoria : ''}\n⚡ ${queja.urgencia}\n\n📝 ${descripcion.substring(0,200)}${descripcion.length > 200 ? '...' : ''}`;
+      const tipoEmoji = {queja:'⚠️',sugerencia:'💡',denuncia:'🚨',felicitacion:'👍'};
+      const msg = `${tipoEmoji[tipoSeleccionado]||'📢'} *${tipoSeleccionado.toUpperCase()} en Gáldar*\n\n📍 *${barrio}*${queja.calle ? ' - ' + queja.calle : ''}\n🏷️ ${categoria} ${queja.subcategoria ? '· ' + queja.subcategoria : ''}\n⚡ ${queja.urgencia}\n\n📝 ${descripcion.substring(0,200)}${descripcion.length > 200 ? '...' : ''}`;
       await fetch(`https://api.telegram.org/bot7942127205:AAEr3B_6I8-DVwXxrxLhzMMmEMFX71FZnmo/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
