@@ -3,12 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Gáldar Vecinos — Quejas Ciudadanas</title>
+<title>Gáldar — Panel Concejal</title>
 <meta name="theme-color" content="#1a5276">
-<link rel="manifest" href="manifest.json">
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 :root {
@@ -17,543 +15,1071 @@
   --verde: #1e8449;
   --rojo: #c0392b;
   --naranja: #e67e22;
-  --gris: #f4f6f7;
+  --amarillo: #f39c12;
+  --gris: #f0f3f4;
   --texto: #2c3e50;
   --sombra: 0 2px 12px rgba(0,0,0,0.12);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Segoe UI', sans-serif; background: var(--gris); color: var(--texto); min-height: 100vh; }
 
-/* CABECERA */
+/* ── LOGIN ── */
+#loginScreen {
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #0d2137, #1a5276, #2e86c1);
+  padding: 30px 20px;
+}
+.login-logo { font-size: 64px; margin-bottom: 10px; }
+.login-titulo { color: white; font-size: 22px; font-weight: 800; text-align: center; }
+.login-sub { color: rgba(255,255,255,0.7); font-size: 13px; margin-top: 4px; text-align: center; }
+.login-card {
+  background: white; border-radius: 16px; padding: 28px 24px;
+  width: 100%; max-width: 360px; margin-top: 28px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+.login-card h2 { font-size: 16px; color: var(--azul); margin-bottom: 20px; text-align: center; }
+.login-card input {
+  width: 100%; padding: 13px 15px; border: 1.5px solid #d0d7de;
+  border-radius: 8px; font-size: 15px; margin-bottom: 12px; font-family: inherit;
+}
+.login-card input:focus { outline: none; border-color: var(--azul-claro); }
+.btn-login {
+  width: 100%; padding: 14px; background: linear-gradient(135deg, var(--azul), var(--azul-claro));
+  color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: transform 0.1s;
+}
+.btn-login:active { transform: scale(0.98); }
+.login-error { color: var(--rojo); font-size: 13px; text-align: center; margin-top: 8px; display: none; }
+.login-badge {
+  background: rgba(255,255,255,0.12); color: white; border-radius: 20px;
+  padding: 6px 16px; font-size: 12px; margin-top: 14px; text-align: center;
+}
+
+/* ── CABECERA PANEL ── */
+#app { display: none; }
 header {
   background: linear-gradient(135deg, var(--azul), var(--azul-claro));
-  color: white; padding: 16px 20px;
-  display: flex; align-items: center; gap: 14px;
+  color: white; padding: 14px 18px;
+  display: flex; align-items: center; justify-content: space-between;
   box-shadow: var(--sombra); position: sticky; top: 0; z-index: 100;
 }
-.logo-escudo { font-size: 36px; }
-.header-txt h1 { font-size: 18px; font-weight: 700; }
-.header-txt p { font-size: 12px; opacity: 0.85; }
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header-left h1 { font-size: 16px; font-weight: 700; }
+.header-left p { font-size: 11px; opacity: 0.8; }
+.btn-logout {
+  background: rgba(255,255,255,0.2); border: none; color: white;
+  border-radius: 8px; padding: 7px 12px; cursor: pointer; font-size: 13px;
+}
 
-/* TABS */
+/* ── TABS ── */
 .tabs {
   display: flex; background: white;
   border-bottom: 3px solid var(--azul-claro);
-  overflow-x: auto; position: sticky; top: 68px; z-index: 90;
+  overflow-x: auto; position: sticky; top: 62px; z-index: 90;
   box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 .tab-btn {
-  flex: 1; min-width: 90px; padding: 12px 8px;
+  flex: 1; min-width: 80px; padding: 11px 6px;
   border: none; background: none; cursor: pointer;
-  font-size: 11px; font-weight: 600; color: #666;
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 600; color: #666;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
   transition: all 0.2s; border-bottom: 3px solid transparent; margin-bottom: -3px;
 }
-.tab-btn i { font-size: 18px; }
+.tab-btn i { font-size: 17px; }
 .tab-btn.active { color: var(--azul-claro); border-bottom-color: var(--azul-claro); }
-
-/* CONTENIDO */
-.tab-content { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
-.tab-content.active { display: block; }
-
-/* TARJETAS */
-.card {
-  background: white; border-radius: 12px; padding: 20px;
-  box-shadow: var(--sombra); margin-bottom: 16px;
-}
-.card-title {
-  font-size: 15px; font-weight: 700; color: var(--azul);
-  margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+.badge {
+  background: var(--rojo); color: white; border-radius: 10px;
+  padding: 1px 6px; font-size: 9px; font-weight: 700; margin-top: 1px;
 }
 
-/* FORMULARIO */
-.form-group { margin-bottom: 14px; }
-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: var(--texto); }
-select, textarea, input[type=text] {
-  width: 100%; padding: 11px 13px; border: 1.5px solid #d0d7de;
-  border-radius: 8px; font-size: 14px; background: white;
-  font-family: inherit; transition: border-color 0.2s;
-}
-select:focus, textarea:focus, input:focus {
-  outline: none; border-color: var(--azul-claro);
-}
-textarea { min-height: 90px; resize: vertical; }
+/* ── CONTENIDO ── */
+.tab-content { display: none; padding: 14px; max-width: 700px; margin: 0 auto; }
+.tab-content.active { display: block; padding-bottom: 30px; }
 
-/* TIPO COMUNICACIÓN */
-.tipo-btn {
-  border: 2px solid #d0d7de; border-radius: 10px; padding: 12px 8px;
-  text-align: center; cursor: pointer; background: white;
-  transition: all 0.2s;
-}
-.tipo-btn.active {
-  border-color: var(--azul-claro); background: #e8f4fd;
-}
-.tipo-btn:active { transform: scale(0.97); }
-
-/* TIPO COMUNICACIÓN */
-.btn-voz {
-  background: var(--azul); color: white; border: none;
-  border-radius: 6px; padding: 8px 12px; font-size: 13px;
-  cursor: pointer; margin-top: 5px; display: flex; align-items: center; gap: 6px;
-}
-.btn-voz.grabando { background: var(--rojo); animation: pulse 1s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
-
-/* BOTÓN PRINCIPAL */
-.btn-primary {
-  width: 100%; padding: 15px; background: linear-gradient(135deg, var(--azul), var(--azul-claro));
-  color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700;
-  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
-  box-shadow: 0 4px 12px rgba(30,130,200,0.3); transition: transform 0.15s;
-}
-.btn-primary:active { transform: scale(0.98); }
-.btn-primary:disabled { background: #aaa; box-shadow: none; cursor: not-allowed; }
-
-/* CÁMARA */
-.foto-preview { width: 100%; border-radius: 8px; margin-top: 10px; display: none; }
-.btn-camara {
-  width: 100%; padding: 12px; background: #ecf0f1; border: 2px dashed #bdc3c7;
-  border-radius: 8px; cursor: pointer; font-size: 14px; color: #666;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  transition: all 0.2s;
-}
-.btn-camara:hover { background: #d5e8f0; border-color: var(--azul-claro); }
-
-/* GPS */
-.gps-info {
-  background: #eafaf1; border: 1.5px solid #a9dfbf; border-radius: 8px;
-  padding: 10px 14px; font-size: 13px; color: var(--verde); margin-top: 8px;
-  display: flex; align-items: center; gap: 8px;
-}
-.gps-error { background: #fef9e7; border-color: #f9ca24; color: #d35400; }
-
-/* ALERTA BARRIO */
-.alerta-barrio {
-  background: #fef9e7; border-left: 4px solid var(--naranja);
-  border-radius: 6px; padding: 10px 14px; font-size: 13px;
-  color: #7d6608; margin-top: 8px; display: none;
-}
-
-/* ESTADO ENVÍO */
-.estado-envio {
-  text-align: center; padding: 20px; border-radius: 10px;
-  margin-top: 10px; display: none;
-}
-.estado-ok { background: #eafaf1; color: var(--verde); }
-.estado-error { background: #fdf2f2; color: var(--rojo); }
-
-/* ESTADÍSTICAS */
-.stats-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;
+/* ── STATS SUPERIORES ── */
+.stats-top {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px;
 }
 .stat-box {
-  background: white; border-radius: 10px; padding: 16px; text-align: center;
+  background: white; border-radius: 10px; padding: 14px; text-align: center;
   box-shadow: var(--sombra);
 }
-.stat-num { font-size: 28px; font-weight: 800; color: var(--azul-claro); }
-.stat-label { font-size: 12px; color: #666; margin-top: 3px; }
+.stat-num { font-size: 26px; font-weight: 800; }
+.stat-label { font-size: 11px; color: #666; margin-top: 2px; }
+.stat-box.pendiente .stat-num { color: var(--naranja); }
+.stat-box.total .stat-num { color: var(--azul-claro); }
+.stat-box.resuelto .stat-num { color: var(--verde); }
+.stat-box.urgente .stat-num { color: var(--rojo); }
 
-/* IDEAS */
-.idea-card {
-  background: white; border-radius: 10px; padding: 16px;
-  box-shadow: var(--sombra); margin-bottom: 12px; border-left: 4px solid var(--azul-claro);
+/* ── FILTROS ── */
+.filtros {
+  background: white; border-radius: 10px; padding: 12px 14px;
+  box-shadow: var(--sombra); margin-bottom: 14px;
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
 }
-.btn-social {
-  display: flex; align-items: center; gap: 10px;
-  width: 100%; padding: 13px 16px; border: none; border-radius: 8px;
-  font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 10px;
-  transition: transform 0.15s;
+.filtros select, .filtros input {
+  padding: 8px 10px; border: 1.5px solid #d0d7de; border-radius: 7px;
+  font-size: 13px; background: white; font-family: inherit;
 }
-.btn-social:active { transform: scale(0.97); }
+.filtros select:focus, .filtros input:focus { outline: none; border-color: var(--azul-claro); }
+
+/* ── TARJETA QUEJA ── */
+.queja-card {
+  background: white; border-radius: 10px; padding: 14px;
+  box-shadow: var(--sombra); margin-bottom: 10px;
+  border-left: 4px solid var(--azul-claro); cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.queja-card:active { transform: scale(0.99); }
+.queja-card.muy_urgente { border-left-color: var(--rojo); }
+.queja-card.urgente { border-left-color: var(--naranja); }
+.queja-card.resuelto { border-left-color: var(--verde); opacity: 0.7; }
+.queja-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.queja-barrio { font-weight: 700; font-size: 14px; color: var(--azul); }
+.queja-cat { font-size: 12px; color: #666; margin-top: 2px; }
+.queja-desc { font-size: 13px; margin: 8px 0; line-height: 1.4; color: #444; }
+.queja-meta { font-size: 11px; color: #999; display: flex; gap: 12px; flex-wrap: wrap; }
+.badge-estado {
+  display: inline-block; padding: 3px 10px; border-radius: 12px;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.badge-pendiente { background: #fef9e7; color: #7d6608; }
+.badge-proceso { background: #e8f4fd; color: #1a5276; }
+.badge-resuelto { background: #eafaf1; color: #1e8449; }
+.badge-descartado { background: #f5f5f5; color: #888; }
+.badge-urgente { background: #fef0e6; color: #c0392b; }
+.badge-muy_urgente { background: #fdecea; color: #c0392b; font-weight: 800; }
+
+/* ── ACCIONES QUEJA ── */
+.queja-acciones {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px;
+  border-top: 1px solid #f0f0f0; padding-top: 10px;
+}
+.btn-accion {
+  padding: 6px 12px; border: none; border-radius: 6px;
+  font-size: 12px; font-weight: 600; cursor: pointer; transition: transform 0.1s;
+  display: flex; align-items: center; gap: 5px;
+}
+.btn-accion:active { transform: scale(0.97); }
+.btn-proceso { background: #e8f4fd; color: var(--azul-claro); }
+.btn-resuelto { background: #eafaf1; color: var(--verde); }
+.btn-descartar { background: #f5f5f5; color: #888; }
+.btn-ia { background: linear-gradient(135deg, #8e44ad, #9b59b6); color: white; }
 .btn-whatsapp { background: #25d366; color: white; }
-.btn-facebook { background: #1877f2; color: white; }
-.btn-pleno { background: var(--azul); color: white; }
 
-/* CONTACTOS EMERGENCIA */
-.contacto-item {
-  display: flex; align-items: center; gap: 14px;
-  padding: 14px; background: white; border-radius: 10px;
-  box-shadow: var(--sombra); margin-bottom: 10px; text-decoration: none;
-  color: var(--texto); transition: transform 0.15s;
+/* ── PANEL IA ── */
+.ia-panel {
+  background: linear-gradient(135deg, #f4eefb, #e8e0f5);
+  border: 1.5px solid #c39bd3; border-radius: 10px;
+  padding: 14px; margin-top: 10px; display: none;
 }
-.contacto-item:active { transform: scale(0.98); }
-.contacto-icono {
-  width: 44px; height: 44px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px; flex-shrink: 0;
+.ia-panel h4 { color: #6c3483; font-size: 13px; margin-bottom: 8px; }
+.ia-resp { font-size: 13px; line-height: 1.6; color: var(--texto); white-space: pre-wrap; }
+.ia-loading { text-align: center; color: #9b59b6; font-size: 13px; padding: 10px; }
+
+/* ── GENERADOR POSTS ── */
+.post-card {
+  background: white; border-radius: 10px; padding: 16px;
+  box-shadow: var(--sombra); margin-bottom: 14px;
 }
-.ci-rojo { background: #fdecea; color: var(--rojo); }
-.ci-azul { background: #e8f4fd; color: var(--azul-claro); }
-.ci-verde { background: #eafaf1; color: var(--verde); }
-.contacto-info strong { display: block; font-size: 14px; font-weight: 700; }
-.contacto-info span { font-size: 12px; color: #666; }
+.post-card h3 { font-size: 15px; color: var(--azul); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.post-resultado {
+  background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px;
+  padding: 14px; font-size: 13px; line-height: 1.6; white-space: pre-wrap;
+  min-height: 60px; margin-top: 10px; display: none;
+}
+.btn-copiar {
+  background: var(--azul-claro); color: white; border: none;
+  border-radius: 6px; padding: 8px 14px; font-size: 13px; cursor: pointer;
+  margin-top: 8px; display: none; align-items: center; gap: 6px;
+}
+.btn-fb {
+  background: #1877f2; color: white; border: none;
+  border-radius: 6px; padding: 8px 14px; font-size: 13px; cursor: pointer;
+  margin-top: 8px; margin-left: 8px; display: none; align-items: center; gap: 6px;
+}
+.btn-generar {
+  width: 100%; padding: 12px; background: linear-gradient(135deg, #8e44ad, #9b59b6);
+  color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 10px;
+}
+select, textarea, input[type=text] {
+  width: 100%; padding: 10px 12px; border: 1.5px solid #d0d7de;
+  border-radius: 8px; font-size: 13px; font-family: inherit;
+  margin-top: 4px;
+}
+select:focus, textarea:focus, input:focus { outline: none; border-color: var(--azul-claro); }
+label { font-size: 12px; font-weight: 600; color: var(--texto); display: block; margin-bottom: 3px; margin-top: 10px; }
 
-/* MAPA CALOR */
-#mapaCalor { width: 100%; height: 350px; border-radius: 10px; overflow: hidden; }
+/* ── MAPA ── */
+#mapaPanel { width: 100%; height: 360px; border-radius: 10px; overflow: hidden; }
 
-/* TOAST */
+/* ── IDEAS PANEL ── */
+.idea-item {
+  background: white; border-radius: 8px; padding: 13px;
+  box-shadow: var(--sombra); margin-bottom: 8px;
+  border-left: 3px solid var(--azul-claro);
+}
+.idea-pleno { border-left-color: var(--naranja); }
+
+/* ── ASESOR IA ── */
+.chat-msg {
+  display: flex; gap: 10px; margin-bottom: 12px;
+}
+.chat-msg.ia { flex-direction: row; }
+.chat-msg.user { flex-direction: row-reverse; }
+.chat-burbuja {
+  max-width: 80%; padding: 10px 14px; border-radius: 12px;
+  font-size: 13px; line-height: 1.5;
+}
+.chat-msg.ia .chat-burbuja { background: #f0e8fc; color: var(--texto); border-bottom-left-radius: 4px; }
+.chat-msg.user .chat-burbuja { background: var(--azul-claro); color: white; border-bottom-right-radius: 4px; }
+.chat-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.chat-ia-av { background: #e8d5f5; }
+.chat-user-av { background: var(--azul-claro); color: white; }
+#chatInput { resize: none; min-height: 44px; }
+#chatMsgs { min-height: 200px; max-height: 400px; overflow-y: auto; padding: 4px; }
+
+/* ── TOAST ── */
 .toast {
-  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-  background: #2c3e50; color: white; padding: 12px 24px; border-radius: 25px;
-  font-size: 14px; font-weight: 600; z-index: 999; display: none;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: #2c3e50; color: white; padding: 11px 22px; border-radius: 25px;
+  font-size: 13px; font-weight: 600; z-index: 999; display: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
 }
 
-/* NAV BOTTOM */
-.bottom-nav {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  background: white; border-top: 1px solid #e0e0e0;
-  display: flex; padding: 6px 0; z-index: 90;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+/* ── SPINNER ── */
+.spinner { text-align: center; padding: 30px; color: #aaa; font-size: 13px; }
+
+/* ── RIVALES ── */
+.rival-card {
+  background: white; border-radius: 10px; padding: 13px;
+  box-shadow: var(--sombra); margin-bottom: 8px;
+  border-left: 4px solid #e74c3c;
 }
-.bottom-nav .tab-btn { font-size: 10px; }
-body { padding-bottom: 70px; }
+.rival-inicial {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 800; font-size: 13px; flex-shrink: 0;
+}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo-escudo">🏛️</div>
-  <div class="header-txt">
-    <h1>Gáldar Ciudadano</h1>
-    <p>Participa · Informa · Mejora tu municipio</p>
-  </div>
-</header>
+<!-- ══════════════════════════════ LOGIN ══════════════════════════════ -->
+<div id="loginScreen">
+  <div class="login-logo">🏛️</div>
+  <div class="login-titulo">Panel Concejal</div>
+  <div class="login-sub">Gáldar · Unidos por Gran Canaria</div>
 
-<!-- TABS SUPERIORES -->
-<div class="tabs">
-  <button class="tab-btn active" onclick="mostrarTab('quejas')" id="tb-quejas">
-    <i class="fas fa-exclamation-triangle"></i>Queja
-  </button>
-  <button class="tab-btn" onclick="mostrarTab('mapa')" id="tb-mapa">
-    <i class="fas fa-map-marked-alt"></i>Mapa
-  </button>
-  <button class="tab-btn" onclick="mostrarTab('stats')" id="tb-stats">
-    <i class="fas fa-chart-bar"></i>Estadísticas
-  </button>
-  <button class="tab-btn" onclick="mostrarTab('ideas')" id="tb-ideas">
-    <i class="fas fa-lightbulb"></i>Ideas
-  </button>
-  <button class="tab-btn" onclick="mostrarTab('contactos')" id="tb-contactos">
-    <i class="fas fa-phone"></i>Contactos
-  </button>
+  <div class="login-card">
+    <h2>🔐 Acceso Restringido</h2>
+    <input type="text" id="loginUser" placeholder="Usuario" autocomplete="username">
+    <input type="password" id="loginPass" placeholder="Contraseña" autocomplete="current-password"
+           onkeypress="if(event.key==='Enter')doLogin()">
+    <button class="btn-login" onclick="doLogin()">
+      <i class="fas fa-sign-in-alt"></i> Entrar al panel
+    </button>
+    <div class="login-error" id="loginError">Usuario o contraseña incorrectos</div>
+  </div>
+
+  <div class="login-badge">
+    👨‍💼 José Blas Díaz Bolaños · Concejal UxGC
+  </div>
 </div>
 
-<!-- ═══ TAB: ENVIAR QUEJA ═══ -->
-<div class="tab-content active" id="tab-quejas">
-
-  <div class="card">
-    <div class="card-title"><i class="fas fa-tag"></i> ¿Qué quieres comunicar?</div>
-    <div class="form-group">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="tipo-btn active" id="tipo-queja" onclick="selTipo('queja')">
-          <div style="font-size:22px">⚠️</div>
-          <div style="font-size:13px;font-weight:700;margin-top:4px">Queja</div>
-          <div style="font-size:10px;color:#666;margin-top:2px">Problema o incidencia</div>
-        </div>
-        <div class="tipo-btn" id="tipo-sugerencia" onclick="selTipo('sugerencia')">
-          <div style="font-size:22px">💡</div>
-          <div style="font-size:13px;font-weight:700;margin-top:4px">Sugerencia</div>
-          <div style="font-size:10px;color:#666;margin-top:2px">Idea de mejora</div>
-        </div>
-        <div class="tipo-btn" id="tipo-denuncia" onclick="selTipo('denuncia')">
-          <div style="font-size:22px">🚨</div>
-          <div style="font-size:13px;font-weight:700;margin-top:4px">Denuncia</div>
-          <div style="font-size:10px;color:#666;margin-top:2px">Irregularidad grave</div>
-        </div>
-        <div class="tipo-btn" id="tipo-felicitacion" onclick="selTipo('felicitacion')">
-          <div style="font-size:22px">👍</div>
-          <div style="font-size:13px;font-weight:700;margin-top:4px">Felicitación</div>
-          <div style="font-size:10px;color:#666;margin-top:2px">Algo bien hecho</div>
-        </div>
+<!-- ══════════════════════════════ APP ══════════════════════════════ -->
+<div id="app">
+  <header>
+    <div class="header-left">
+      <span style="font-size:28px">🏛️</span>
+      <div>
+        <h1>Panel Concejal — Gáldar</h1>
+        <p>José Blas Díaz Bolaños · UxGC</p>
       </div>
     </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title"><i class="fas fa-map-marker-alt"></i> Ubicación</div>
-
-    <div class="form-group">
-      <label>Barrio / Zona</label>
-      <select id="selBarrio" onchange="checkAlertaBarrio()">
-        <option value="">— Selecciona tu barrio —</option>
-        <optgroup label="🏙️ Casco Urbano">
-          <option>Centro</option><option>El Calvario</option><option>La Montaña</option>
-          <option>Becerril</option><option>Palma de Rojas</option><option>Cañada Honda</option>
-          <option>Barrial</option><option>Nido Cuervo</option><option>Los Quintana</option>
-          <option>La Enconada</option><option>Marmolejo</option><option>Majadilla</option>
-          <option>Taya</option><option>Audiencia</option><option>Coruña</option>
-          <option>Las Canteras</option><option>San Sebastián</option><option>El Burrero</option>
-          <option>Lomo de San Antón</option><option>Los Llanos</option>
-        </optgroup>
-        <optgroup label="🏖️ Costa">
-          <option>El Agujero</option><option>Sardina del Norte</option>
-          <option>Puerto de Sardina</option><option>Caleta de Arriba</option>
-          <option>Caleta de Abajo</option><option>El Sobradillo</option>
-        </optgroup>
-        <optgroup label="🌿 Medianías">
-          <option>San Isidro</option><option>Hoya de Pineda</option><option>Anzofé</option>
-          <option>Piso Firme</option><option>Las Rosas</option>
-          <option>El Roque</option><option>Las Majadillas</option>
-        </optgroup>
-        <optgroup label="⛰️ Interior">
-          <option>Juncalillo</option><option>Barranco Hondo</option><option>Tablado</option>
-          <option>Fagajesto</option><option>Caideros</option><option>Saucillo</option>
-        </optgroup>
-      </select>
-      <div class="alerta-barrio" id="alertaBarrio">
-        <i class="fas fa-exclamation-circle"></i>
-        <span id="textoAlerta"></span>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label>Calle / Dirección exacta (opcional)</label>
-      <input type="text" id="calle" placeholder="Ej: Calle Real, 12 / Frente al parque...">
-    </div>
-
-    <button class="btn-camara" onclick="activarGPS()">
-      <i class="fas fa-crosshairs"></i> Capturar mi ubicación GPS
+    <button class="btn-logout" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i>
     </button>
-    <div class="gps-info" id="gpsInfo" style="display:none">
-      <i class="fas fa-check-circle"></i>
-      <span id="gpsTexto">Ubicación capturada</span>
-    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="tab('quejas')" id="tb-quejas">
+      <i class="fas fa-exclamation-triangle"></i>Quejas
+      <span class="badge" id="badgeQuejas">0</span>
+    </button>
+    <button class="tab-btn" onclick="tab('mapa')" id="tb-mapa">
+      <i class="fas fa-map-marked-alt"></i>Mapa
+    </button>
+    <button class="tab-btn" onclick="tab('posts')" id="tb-posts">
+      <i class="fab fa-facebook"></i>Posts IA
+    </button>
+    <button class="tab-btn" onclick="tab('ideas')" id="tb-ideas">
+      <i class="fas fa-lightbulb"></i>Ideas
+      <span class="badge" id="badgeIdeas" style="display:none">!</span>
+    </button>
+    <button class="tab-btn" onclick="tab('asesor')" id="tb-asesor">
+      <i class="fas fa-robot"></i>Asesor IA
+    </button>
+    <button class="tab-btn" onclick="tab('consistorio')" id="tb-consistorio">
+      <i class="fas fa-chess"></i>Rivales
+    </button>
+    <button class="tab-btn" onclick="tab('prensa')" id="tb-prensa">
+      <i class="fas fa-newspaper"></i>Prensa
+    </button>
+    <button class="tab-btn" onclick="tab('pleno')" id="tb-pleno">
+      <i class="fas fa-gavel"></i>Plenos
+    </button>
+    <button class="tab-btn" onclick="tab('ruegos')" id="tb-ruegos">
+      <i class="fas fa-file-signature"></i>Ruegos
+    </button>
+    <button class="tab-btn" onclick="tab('debate')" id="tb-debate">
+      <i class="fas fa-fist-raised"></i>Debate
+    </button>
+    <button class="tab-btn" onclick="tab('documentos')" id="tb-documentos">
+      <i class="fas fa-file-alt"></i>Docs
+    </button>
+    <button class="tab-btn" onclick="tab('vecinos2')" id="tb-vecinos2">
+      <i class="fas fa-bullhorn"></i>Vecinos
+    </button>
   </div>
 
-  <div class="card">
-    <div class="card-title"><i class="fas fa-tags"></i> Tipo de incidencia</div>
-    <div class="form-group">
-      <select id="selCategoria" onchange="actualizarSubcats()">
-        <option value="">— Selecciona categoría —</option>
-        <option value="limpieza">🗑️ Limpieza y residuos</option>
-        <option value="iluminacion">💡 Alumbrado público</option>
-        <option value="vias">🛣️ Vías y pavimento</option>
-        <option value="agua">💧 Agua y alcantarillado</option>
-        <option value="zonas_verdes">🌳 Parques y jardines</option>
-        <option value="seguridad">🚨 Seguridad ciudadana</option>
-        <option value="ruido">🔊 Ruido y convivencia</option>
-        <option value="edificios">🏚️ Edificios y solares</option>
-        <option value="transporte">🚌 Transporte y tráfico</option>
+  <!-- ═══ TAB QUEJAS ═══ -->
+  <div class="tab-content active" id="tab-quejas">
+    <div class="stats-top">
+      <div class="stat-box total"><div class="stat-num" id="stTotal">—</div><div class="stat-label">Total quejas</div></div>
+      <div class="stat-box pendiente"><div class="stat-num" id="stPendientes">—</div><div class="stat-label">Pendientes</div></div>
+      <div class="stat-box urgente"><div class="stat-num" id="stUrgentes">—</div><div class="stat-label">Urgentes</div></div>
+      <div class="stat-box resuelto"><div class="stat-num" id="stResueltas">—</div><div class="stat-label">Resueltas</div></div>
+    </div>
+
+    <div class="filtros">
+      <select id="filtroEstado" onchange="renderQuejas()">
+        <option value="">Todos los estados</option>
+        <option value="pendiente">⏳ Pendiente</option>
+        <option value="en_proceso">🔄 En proceso</option>
+        <option value="resuelto">✅ Resuelto</option>
+        <option value="descartado">❌ Descartado</option>
+      </select>
+      <select id="filtroCat" onchange="renderQuejas()">
+        <option value="">Todas las categorías</option>
+        <option value="limpieza">🗑️ Limpieza</option>
+        <option value="iluminacion">💡 Alumbrado</option>
+        <option value="vias">🛣️ Vías</option>
+        <option value="agua">💧 Agua</option>
+        <option value="zonas_verdes">🌳 Parques</option>
+        <option value="seguridad">🚨 Seguridad</option>
+        <option value="ruido">🔊 Ruido</option>
         <option value="otros">📋 Otros</option>
       </select>
-    </div>
-    <div class="form-group">
-      <select id="selSubcat">
-        <option value="">— Primero elige categoría —</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Urgencia</label>
-      <select id="selUrgencia">
-        <option value="normal">⚪ Normal</option>
-        <option value="urgente">🟡 Urgente</option>
+      <select id="filtroUrgencia" onchange="renderQuejas()">
+        <option value="">Toda urgencia</option>
         <option value="muy_urgente">🔴 Muy urgente</option>
+        <option value="urgente">🟡 Urgente</option>
+        <option value="normal">⚪ Normal</option>
       </select>
     </div>
+
+    <div id="listaQuejas">
+      <div class="spinner"><i class="fas fa-spinner fa-spin"></i> Cargando quejas...</div>
+    </div>
   </div>
 
-  <div class="card">
-    <div class="card-title"><i class="fas fa-comment-alt"></i> Descripción</div>
-    <div class="form-group">
-      <textarea id="descripcion" placeholder="Describe el problema con el mayor detalle posible..."></textarea>
-      <button class="btn-voz" id="btnVoz" ontouchstart="iniciarVoz(event)" onclick="iniciarVoz(event)">
-        <i class="fas fa-microphone"></i> Hablar descripción
+  <!-- ═══ TAB MAPA ═══ -->
+  <div class="tab-content" id="tab-mapa">
+    <div style="background:white;border-radius:10px;padding:14px;box-shadow:var(--sombra)">
+      <h3 style="color:var(--azul);font-size:14px;margin-bottom:10px"><i class="fas fa-fire"></i> Mapa de incidencias</h3>
+      <div id="mapaPanel"></div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB POSTS IA ═══ -->
+  <div class="tab-content" id="tab-posts">
+    <div class="post-card">
+      <h3><i class="fab fa-facebook" style="color:#1877f2"></i> Generador de Posts para Facebook</h3>
+
+      <label>Tipo de post</label>
+      <select id="tipoPost">
+        <option value="gestion">✅ Gestión realizada</option>
+        <option value="queja">📢 Queja ciudadana resuelta</option>
+        <option value="propuesta">💡 Propuesta al pleno</option>
+        <option value="denuncia">🚨 Denuncia/irregularidad</option>
+        <option value="logro">🏆 Logro conseguido</option>
+        <option value="pleno">🏛️ Intervención en pleno</option>
+      </select>
+
+      <label>Tema / Asunto</label>
+      <input type="text" id="temaPost" placeholder="Ej: Farolas apagadas en El Calvario, baches en Cañada Honda...">
+
+      <label>Detalles adicionales</label>
+      <textarea id="detallesPost" placeholder="Añade más contexto, números, fechas, vecinos afectados..." style="min-height:70px"></textarea>
+
+      <label>Tono del post</label>
+      <select id="tonoPost">
+        <option value="cercano">😊 Cercano y directo</option>
+        <option value="firme">💪 Firme y contundente</option>
+        <option value="institucional">🏛️ Institucional</option>
+        <option value="informativo">📊 Informativo</option>
+      </select>
+
+      <button class="btn-generar" onclick="generarPost()">
+        <i class="fas fa-magic"></i> Generar post con IA
+      </button>
+
+      <div class="post-resultado" id="postResultado"></div>
+      <button class="btn-copiar" id="btnCopiar" onclick="copiarPost()">
+        <i class="fas fa-copy"></i> Copiar texto
+      </button>
+      <button class="btn-fb" id="btnFb" onclick="abrirFacebook()">
+        <i class="fab fa-facebook"></i> Abrir Facebook
       </button>
     </div>
 
-    <div class="form-group">
-      <label>Foto del problema (opcional)</label>
-      <input type="file" id="fotoInput" accept="image/*" capture="environment" style="display:none" onchange="previsualizarFoto(event)">
-      <div class="btn-camara" onclick="document.getElementById('fotoInput').click()">
-        <i class="fas fa-camera"></i> Hacer foto o adjuntar imagen
+    <div class="post-card">
+      <h3><i class="fas fa-newspaper" style="color:var(--azul)"></i> Nota de Prensa</h3>
+      <label>Acontecimiento o tema</label>
+      <input type="text" id="temaNota" placeholder="Ej: Pleno del 30 de abril, presupuestos 2025...">
+      <button class="btn-generar" onclick="generarNota()" style="background:linear-gradient(135deg,var(--azul),var(--azul-claro))">
+        <i class="fas fa-file-alt"></i> Generar nota de prensa
+      </button>
+      <div class="post-resultado" id="notaResultado"></div>
+      <button class="btn-copiar" id="btnCopiarNota" onclick="copiarNota()">
+        <i class="fas fa-copy"></i> Copiar nota
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══ TAB IDEAS ═══ -->
+  <div class="tab-content" id="tab-ideas">
+    <div style="background:white;border-radius:10px;padding:14px;box-shadow:var(--sombra);margin-bottom:14px">
+      <h3 style="color:var(--azul);font-size:14px;margin-bottom:12px"><i class="fas fa-lightbulb"></i> Propuestas de los vecinos</h3>
+      <div id="listaIdeasPanel">
+        <div class="spinner"><i class="fas fa-spinner fa-spin"></i> Cargando ideas...</div>
       </div>
-      <img id="fotoPreview" class="foto-preview" alt="Vista previa">
     </div>
   </div>
 
-  <div class="card" style="border-left:4px solid #e74c3c">
-    <div class="card-title"><i class="fas fa-user"></i> Tus datos
-      <span style="font-size:11px;font-weight:400;color:var(--rojo);margin-left:6px">— completamente opcionales</span>
-    </div>
-    <div style="background:#fdf2f2;border:1.5px solid #f1948a;border-radius:8px;padding:10px 14px;margin-bottom:14px">
-      <p style="font-size:12px;color:#c0392b;font-weight:600;display:flex;align-items:flex-start;gap:8px">
-        <i class="fas fa-shield-alt" style="margin-top:2px;flex-shrink:0"></i>
-        <span><strong>No estás obligado a identificarte.</strong> Tu queja será atendida igualmente de forma anónima. Estos datos son solo si quieres recibir respuesta o seguimiento.</span>
-      </p>
-    </div>
-    <div class="form-group">
-      <label style="color:var(--rojo)">Nombre <span style="font-weight:400;font-size:11px">(opcional)</span></label>
-      <input type="text" id="nombre" placeholder="Déjalo vacío para ser anónimo/a">
-    </div>
-    <div class="form-group">
-      <label style="color:var(--rojo)">Teléfono o email <span style="font-weight:400;font-size:11px">(opcional)</span></label>
-      <input type="text" id="telefono" placeholder="Solo si quieres que te contactemos">
-    </div>
-    <p style="font-size:11px;color:#888;margin-top:4px;display:flex;align-items:center;gap:6px">
-      <i class="fas fa-lock"></i> Si facilitas datos, son confidenciales y solo los verá el concejal José Blas.
-    </p>
-  </div>
+  <!-- ═══ TAB ASESOR IA ═══ -->
+  <div class="tab-content" id="tab-asesor">
+    <div style="background:white;border-radius:10px;padding:14px;box-shadow:var(--sombra)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #eee">
+        <div style="font-size:28px">🤖</div>
+        <div>
+          <div style="font-weight:700;color:var(--azul)">Asesor IA de José Blas</div>
+          <div style="font-size:12px;color:#666">Estrategia política · Argumentos · Intervenciones</div>
+        </div>
+      </div>
 
-  <button class="btn-primary" id="btnEnviar" onclick="enviarQueja()">
-    <i class="fas fa-paper-plane"></i> Enviar queja al concejal
-  </button>
+      <div id="chatMsgs">
+        <div class="chat-msg ia">
+          <div class="chat-avatar chat-ia-av">🤖</div>
+          <div class="chat-burbuja">
+            ¡Hola José Blas! Soy tu asesor político IA. Puedo ayudarte con argumentos para el pleno, estrategias frente al equipo de gobierno, respuestas a críticas, análisis de quejas ciudadanas y comunicación con los vecinos.<br><br>
+            ¿En qué te ayudo hoy?
+          </div>
+        </div>
+      </div>
 
-  <div class="estado-envio estado-ok" id="estadoOk">
-    <div style="font-size:40px">✅</div>
-    <div style="font-size:18px;font-weight:700;margin-top:8px">¡Queja enviada!</div>
-    <div style="font-size:13px;margin-top:6px;opacity:0.8">José Blas la recibirá en su panel. Gracias por participar.</div>
-    <button onclick="nuevaQueja()" style="margin-top:14px;padding:10px 24px;border-radius:20px;border:none;background:var(--verde);color:white;font-weight:700;cursor:pointer;font-size:14px">
-      <i class="fas fa-plus"></i> Enviar otra queja
-    </button>
-  </div>
+      <div style="margin-top:14px;display:flex;gap:8px;align-items:flex-end">
+        <textarea id="chatInput" placeholder="Escribe tu consulta..." rows="2"
+          onkeypress="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarChat()}"
+          style="flex:1;min-height:44px;resize:vertical"></textarea>
+        <button onclick="enviarChat()" style="padding:11px 16px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:white;border:none;border-radius:8px;cursor:pointer;font-size:16px;flex-shrink:0">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
 
-  <div class="estado-envio estado-error" id="estadoError">
-    <div style="font-size:40px">❌</div>
-    <div style="font-size:16px;font-weight:700;margin-top:8px">Error al enviar</div>
-    <div style="font-size:13px;margin-top:6px;opacity:0.8" id="textoError">Comprueba tu conexión e inténtalo de nuevo.</div>
-  </div>
-</div>
-
-<!-- ═══ TAB: MAPA ═══ -->
-<div class="tab-content" id="tab-mapa">
-  <div class="card">
-    <div class="card-title"><i class="fas fa-fire"></i> Mapa de incidencias en Gáldar</div>
-    <p style="font-size:13px;color:#666;margin-bottom:12px">Las zonas más rojas tienen mayor concentración de quejas.</p>
-    <div id="mapaCalor"></div>
-  </div>
-  <div class="card">
-    <div class="card-title"><i class="fas fa-info-circle"></i> Leyenda</div>
-    <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px">
-      <div><span style="color:var(--rojo)">●</span> Alta concentración</div>
-      <div><span style="color:var(--naranja)">●</span> Media concentración</div>
-      <div><span style="color:#27ae60">●</span> Baja concentración</div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ TAB: ESTADÍSTICAS ═══ -->
-<div class="tab-content" id="tab-stats">
-  <div class="stats-grid">
-    <div class="stat-box">
-      <div class="stat-num" id="statTotal">—</div>
-      <div class="stat-label">Total quejas</div>
-    </div>
-    <div class="stat-box">
-      <div class="stat-num" id="statPendientes">—</div>
-      <div class="stat-label">Pendientes</div>
-    </div>
-    <div class="stat-box">
-      <div class="stat-num" id="statResueltas">—</div>
-      <div class="stat-label">Resueltas</div>
-    </div>
-    <div class="stat-box">
-      <div class="stat-num" id="statHoy">—</div>
-      <div class="stat-label">Hoy</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title"><i class="fas fa-chart-pie"></i> Por categoría</div>
-    <div id="statsCategorias">
-      <div style="text-align:center;padding:20px;color:#aaa">Cargando estadísticas...</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title"><i class="fas fa-map-pin"></i> Por barrio (Top 5)</div>
-    <div id="statsBarrios">
-      <div style="text-align:center;padding:20px;color:#aaa">Cargando...</div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ TAB: IDEAS ═══ -->
-<div class="tab-content" id="tab-ideas">
-  <div class="card">
-    <div class="card-title"><i class="fas fa-lightbulb"></i> Propuestas y sugerencias</div>
-    <p style="font-size:13px;color:#555;margin-bottom:16px">
-      ¿Tienes una idea para mejorar Gáldar? ¡Compártela con José Blas y con todos los vecinos!
-    </p>
-
-    <div class="form-group">
-      <textarea id="idea" placeholder="Escribe tu propuesta o sugerencia..."></textarea>
-      <button class="btn-voz" id="btnVozIdea" ontouchstart="iniciarVozIdea(event)" onclick="iniciarVozIdea(event)">
-        <i class="fas fa-microphone"></i> Hablar propuesta
-      </button>
-    </div>
-
-    <button class="btn-social btn-whatsapp" onclick="compartirWhatsApp()">
-      <i class="fab fa-whatsapp"></i> Compartir por WhatsApp
-    </button>
-    <button class="btn-social btn-facebook" onclick="compartirFacebook()">
-      <i class="fab fa-facebook"></i> Publicar en Facebook
-    </button>
-    <button class="btn-social btn-pleno" onclick="enviarAPleno()">
-      <i class="fas fa-landmark"></i> Proponer para el próximo Pleno
-    </button>
-  </div>
-
-  <div class="card">
-    <div class="card-title"><i class="fas fa-star"></i> Ideas destacadas</div>
-    <div id="listaIdeas">
-      <div style="text-align:center;padding:20px;color:#aaa">
-        <i class="fas fa-spinner fa-spin"></i> Cargando ideas...
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+        <button onclick="preguntaRapida('¿Qué argumentos puedo usar en el próximo pleno sobre la gestión de residuos?')" style="padding:6px 10px;background:#f0e8fc;border:none;border-radius:16px;font-size:11px;cursor:pointer;color:#6c3483">💡 Argumentos pleno</button>
+        <button onclick="preguntaRapida('Dame un resumen de las quejas más urgentes y qué debo priorizar')" style="padding:6px 10px;background:#f0e8fc;border:none;border-radius:16px;font-size:11px;cursor:pointer;color:#6c3483">📊 Quejas urgentes</button>
+        <button onclick="preguntaRapida('¿Cómo puedo ganar más visibilidad en Gáldar de cara a las elecciones de 2027?')" style="padding:6px 10px;background:#f0e8fc;border:none;border-radius:16px;font-size:11px;cursor:pointer;color:#6c3483">🗳️ Estrategia 2027</button>
+        <button onclick="preguntaRapida('¿Qué temas de Gáldar generan más interés en redes sociales?')" style="padding:6px 10px;background:#f0e8fc;border:none;border-radius:16px;font-size:11px;cursor:pointer;color:#6c3483">📱 Redes sociales</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══ TAB: CONTACTOS ═══ -->
-<div class="tab-content" id="tab-contactos">
-  <div class="card" style="background: linear-gradient(135deg,#1a5276,#2e86c1);color:white;padding:16px">
-    <div style="display:flex;align-items:center;gap:12px">
-      <div style="font-size:40px">👨‍💼</div>
+<!-- ═══ TAB CONSISTORIO ═══ -->
+<div class="tab-content" id="tab-consistorio">
+
+  <!-- ALCALDE -->
+  <div style="background:linear-gradient(135deg,#7b241c,#c0392b);color:white;border-radius:12px;padding:16px;margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+      <div style="font-size:36px">👑</div>
       <div>
-        <div style="font-weight:700;font-size:16px">José Blas Díaz Bolaños</div>
-        <div style="font-size:12px;opacity:0.85">Concejal de UxGC · Gáldar, Gran Canaria</div>
-        <div style="font-size:11px;opacity:0.7;margin-top:2px">Oposición · Portavoz Unidos por Gran Canaria</div>
+        <div style="font-weight:800;font-size:17px">Teodoro Sosa Monzón</div>
+        <div style="font-size:12px;opacity:0.85">ALCALDE · BNR-NC · En el poder desde 2007</div>
+        <div style="font-size:11px;opacity:0.7">78,84% votos en 2023 · 19 de 21 concejales</div>
+      </div>
+    </div>
+    <div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:10px;font-size:12px;margin-bottom:10px">
+      <div style="font-weight:700;margin-bottom:4px">⚠️ PUNTOS DÉBILES:</div>
+      <div>• Gestión económica opaca — reconocimientos extrajudiciales de crédito</div>
+      <div>• 19 años sin oposición real — posible exceso de confianza</div>
+      <div>• Gastos irregulares documentados en plenos</div>
+      <div>• Difícil renovación generacional en su partido</div>
+    </div>
+    <button onclick="preguntarSobreRival('Alcalde Teodoro Sosa Monzón, BNR-NC, 19 años de alcalde. Dame argumentos para confrontarle en el próximo pleno sobre su gestión económica.')" 
+      style="width:100%;padding:10px;background:rgba(255,255,255,0.2);border:1.5px solid white;color:white;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">
+      🤖 Pedir estrategia al Asesor IA
+    </button>
+  </div>
+
+  <!-- OPOSICIÓN -->
+  <div style="background:linear-gradient(135deg,#1a5276,#2e86c1);color:white;border-radius:12px;padding:14px;margin-bottom:14px">
+    <div style="font-size:13px;font-weight:700;margin-bottom:10px;opacity:0.8">👥 GRUPO DE OPOSICIÓN (Grupo Mixto)</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px">🏆</div>
+      <div>
+        <div style="font-weight:700;font-size:14px">José Blas Díaz Bolaños</div>
+        <div style="font-size:11px;opacity:0.8">Portavoz UxGC · TÚ</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:18px">🔵</div>
+      <div>
+        <div style="font-weight:700;font-size:14px">Francisco J. Hernández Rosales</div>
+        <div style="font-size:11px;opacity:0.8">Portavoz PSC-PSOE · Van por separado</div>
       </div>
     </div>
   </div>
 
-  <a href="tel:112" class="contacto-item">
-    <div class="contacto-icono ci-rojo"><i class="fas fa-ambulance"></i></div>
-    <div class="contacto-info">
-      <strong>Emergencias</strong><span>112 · Urgencias, bomberos, policía</span>
+  <!-- CONCEJALES GOBIERNO -->
+  <div style="background:white;border-radius:12px;padding:14px;box-shadow:var(--sombra);margin-bottom:8px">
+    <div style="font-size:14px;font-weight:700;color:var(--azul);margin-bottom:8px">
+      <i class="fas fa-chess-board"></i> Equipo de Gobierno BNR-NC (19 concejales)
     </div>
-  </a>
-  <a href="tel:092" class="contacto-item">
-    <div class="contacto-icono ci-azul"><i class="fas fa-shield-alt"></i></div>
-    <div class="contacto-info">
-      <strong>Policía Local Gáldar</strong><span>092</span>
+    <div style="font-size:11px;color:#888;margin-bottom:4px">💡 Pulsa el botón IA para obtener argumentos contra cada área</div>
+    <div style="font-size:11px;color:#e74c3c;font-weight:600">💰 Total retribuciones visibles — úsalas como argumento político</div>
+  </div>
+
+  <div class="rival-card" id="rival-0">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="rival-inicial" style="background:#c0392b">J</div>
+        <div>
+          <div style="font-weight:700;font-size:13px">Julio Mateo Castillo</div>
+          <div style="font-size:11px;color:#666">1er Teniente Alcalde · Presidencia + Cultura y Fiestas + Portavoz BNR</div>
+          <div style="font-size:10px;color:#e74c3c;margin-top:2px">💰 43.239,70€/año · Dedicación exclusiva</div>
+        </div>
+      </div>
+      <button onclick="preguntarSobreRival('Julio Mateo Castillo, 1er Teniente Alcalde · Presidencia + Cultura y Fiestas + Portavoz BNR. Dame argumentos y preguntas para confrontarle en pleno sobre su gestión.')"
+        style="padding:6px 10px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;flex-shrink:0">
+        🤖 IA
+      </button>
     </div>
-  </a>
-  <a href="tel:928890000" class="contacto-item">
-    <div class="contacto-icono ci-verde"><i class="fas fa-building"></i></div>
-    <div class="contacto-info">
-      <strong>Ayuntamiento de Gáldar</strong><span>928 89 00 00</span>
+    <div class="rival-ia" id="rival-ia-0" style="display:none;margin-top:10px;background:#f4eefb;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;color:var(--texto)">
+      <i class="fas fa-spinner fa-spin"></i> Consultando asesor...
     </div>
-  </a>
-  <a href="tel:010" class="contacto-item">
-    <div class="contacto-icono ci-azul"><i class="fas fa-headset"></i></div>
-    <div class="contacto-info">
-      <strong>Información Municipal</strong><span>010 · Consultas del Ayuntamiento</span>
+  </div>
+
+  <div class="rival-card" id="rival-1">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="rival-inicial" style="background:#e67e22">I</div>
+        <div>
+          <div style="font-weight:700;font-size:13px">Inmaculada Valeriana Guerra Mendoza</div>
+          <div style="font-size:11px;color:#666">2ª Teniente · Hacienda, Patrimonio, Catastro y Policía Local</div>
+          <div style="font-size:10px;color:#e74c3c;margin-top:2px">💰 33.409,46€/año · Parcial</div>
+        </div>
+      </div>
+      <button onclick="preguntarSobreRival('Inmaculada Valeriana Guerra Mendoza, 2ª Teniente · Hacienda, Patrimonio, Catastro y Policía Local. Dame argumentos y preguntas para confrontarle en pleno sobre su gestión.')"
+        style="padding:6px 10px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;flex-shrink:0">
+        🤖 IA
+      </button>
     </div>
-  </a>
-  <a href="https://wa.me/34000000000" class="contacto-item" target="_blank">
-    <div class="contacto-icono ci-verde"><i class="fab fa-whatsapp"></i></div>
-    <div class="contacto-info">
-      <strong>WhatsApp José Blas</strong><span>Contáctale directamente</span>
+    <div class="rival-ia" id="rival-ia-1" style="display:none;margin-top:10px;background:#f4eefb;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;color:var(--texto)">
+      <i class="fas fa-spinner fa-spin"></i> Consultando asesor...
     </div>
-  </a>
-</div>
+  </div>
+
+  <div class="rival-card" id="rival-2">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="rival-inicial" style="background:#8e44ad">C</div>
+        <div>
+          <div style="font-weight:700;font-size:13px">Carlos Matías Ruiz Moreno</div>
+          <div style="font-size:11px;color:#666">3er Teniente · Patrimonio Histórico, Archivo, Biblioteca, Medianías, Fundación</div>
+          <div style="font-size:10px;color:#e74c3c;margin-top:2px">💰 43.239,70€/año · Exclusiva</div>
+        </div>
+      </div>
+      <button onclick="preguntarSobreRival('Carlos Matías Ruiz Moreno, 3er Teniente · Patrimonio Histórico, Archivo, Biblioteca, Medianías, Fundación. Dame argumentos y preguntas para confrontarle en pleno sobre su gestión.')"
+        style="padding:6px 10px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;flex-shrink:0">
+        🤖 IA
+      </button>
+    </div>
+    <div class="rival-ia" id="rival-ia-2" style="display:none;margin-top:10px;background:#f4eefb;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;color:var(--texto)">
+      <i class="fas fa-spinner fa-spin"></i> Consultando asesor...
+    </div>
+  </div>
+
+  <div class="rival-card" id="rival-3">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="rival-inicial" style="background:#2980b9">A</div>
+        <div>
+          <div style="font-weight:700;font-size:13px">Ana Teresa Mendoza Jiménez</div>
+          <div style="font-size:11px;color:#666">4ª Teniente · Servicios Sociales, Igualdad, Pisos Tutelados, Centro Ocupacional</div>
+          <div style="font-size:10px;color:#e74c3c;margin-top:2px">💰 43.239,70€/año · Exclusiva</div>
+        </div>
+      </div>
+      <button onclick="preguntarSobreRival('Ana Teresa Mendoza Jiménez, 4ª Teniente · Servicios Sociales, Igualdad, Pisos Tutelados, Centro Ocupacional. Dame argumentos y preguntas para confrontarle en pleno sobre su gestión.')"
+        style="padding:6px 10px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;flex-shrink:0">
+        🤖 IA
+      </button>
+    </div>
+    <div class="rival-ia" id="rival-ia-3" style="display:none;margin-top:10px;background:#f4eefb;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;color:var(--texto)">
+      <i class="fas fa-spinner fa-spin"></i> Consultando asesor...
+    </div>
+  </div>
+
+  <div class="rival-card" id="rival-4">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="rival-inicial" style="background:#27ae60">Ag</div>
+        <div>
+          <div style="font-weight:700;font-size:13px">Agustín Martín Ojeda</div>
+          <div style="font-size:11px;color:#666">5º Teniente · Desarrollo Socioeconómico, Agricultura, Ganadería, Pesca, Comercio</div>
+          <div style="font-size:10px;color:#e74c3c;margin-top:2px">💰 43.239,70€/año · Exclusiva</div>
+        </div>
+      </div>
+      <button onclick="preguntarSobreRival('Agustín Martín Ojeda, 5º Teniente · Desarrollo Socioeconómico, Agricultura, Ganadería, Pesca, Comercio. Dame argumentos y preguntas para confrontarle en pleno sobre su gestión.')"
+        style="padding:6px 10px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;flex-shrink:0">
+        🤖 IA
+      </button>
+    </div>
+    <div class="rival-ia" id="rival-ia-4" style="display:none;margin-top:10px;background:#f4eefb;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;color:var(--texto)">
+      <i class="fas fa-spinner fa-spin"></i> Consultando asesor...
+    </div>
+  </div>
+
+  <div class="rival-card" id="rival-5">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="rival-inicial" style="background:#16a085">Id</div>
+        <div>
+          <div style="font-weight:700;font-size:13px">Idaira Chaxiraxi Mateo Moreno</div>
+          <div style="font-size:11px;color:#666">6ª Teniente · Recursos Humanos, Galobra, Cementerio, Tanatorio</div>
+          <div style="font-size:10px;color:#e74c3c;margin-top:2px">💰 43.239,70€/año · Exclusiva</div>
+        </div>
+      </div>
+      <button onclick="preguntarSobreRival('Idaira Chaxiraxi Mateo Moreno, 6ª Teniente · Recursos Humanos, Galobra, Cementerio, Tanatorio. Dame argumentos y preguntas para confrontarle en pleno sobre su gestión.')"
+        style="padding:6px 10px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;flex-shrink:0">
+        🤖 IA
+      </button>
+    </div>
+    <div class="rival-ia" id="rival-ia-5" style="display:none;margin-top:10px;background:#f4eefb;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;color:var(--texto)">
+      <i class="fas fa-spinner fa-spin"></i> Consultando asesor...
+    </div>
+  </div>
+
+  <div class="rival-card" id="rival-6">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="rival-inicial" style="background:#d35400">H</div>
+        <div>
+          <div style="font-weight:700;font-size:13px">Heriberto José Reyes Sánchez</div>
+          <div style="font-size:11px;color:#666">7º Teniente · Urbanismo y Accesibilidad</div>
+          <div style="font-size:10px;color:#e74c3c;margin-top:2px">💰 43.239,70€/año · Exclusiva</div>
+        </div>
+      </div>
+      <button onclick="preguntarSobreRival('Heriberto José Reyes Sánchez, 7º Teniente · Urbanismo y Accesibilidad. Dame argumentos y preguntas para confrontarle en pleno sobre su gestión.')"
+        style="padding:6px 10px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;flex-shrink:0">
+        🤖 IA
+      </button>
+    </div>
+    <div class="rival-ia" id="rival-ia-6" style="display:none;margin-top:10px;background:#f4eefb;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;color:var(--texto)">
+      <i class="fas fa-spinner fa-spin"></i> Consultando asesor...
+    </div>
+  </div>
+
+  <div class="rival-card" id="rival-7">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="rival-inicial" style="background:#7f8c8d">R</div>
+        <div>
+          <div style="font-weight:700;font-size:13px">Rita María Cabrera Cruz</div>
+          <div style="font-size:11px;color:#666">Educación, Escuela Infantil y Universidad Popular</div>
+          <div style="font-size:10px;color:#e74c3c;margin-top:2px">💰 19.645,50€/año · Parcial</div>
+        </div>
+      </div>
+      <button onclick="preguntarSobreRival('Rita María Cabrera Cruz, Educación, Escuela Infantil y Universidad Popular. Dame argumentos y preguntas para confrontarle en pleno sobre su gestión.')"
+        style="padding:6px 10px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;flex-shrink:0">
+        🤖 IA
+      </button>
+    </div>
+    <div class="rival-ia" id="rival-ia-7" style="display:none;margin-top:10px;background:#f4eefb;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;color:var(--texto)">
+      <i class="fas fa-spinner fa-spin"></i> Consultando asesor...
+    </div>
+  </div>
+
+  <div class="rival-card" id="rival-8">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="rival-inicial" style="background:#6c3483">D</div>
+        <div>
+          <div style="font-weight:700;font-size:13px">Dolores Delgado Jorge</div>
+          <div style="font-size:11px;color:#666">Política del Mayor · Centro de Día, Residencia, Programas Mayores</div>
+          <div style="font-size:10px;color:#e74c3c;margin-top:2px">💰 39.290,86€/año · Exclusiva</div>
+        </div>
+      </div>
+      <button onclick="preguntarSobreRival('Dolores Delgado Jorge, Política del Mayor · Centro de Día, Residencia, Programas Mayores. Dame argumentos y preguntas para confrontarle en pleno sobre su gestión.')"
+        style="padding:6px 10px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;flex-shrink:0">
+        🤖 IA
+      </button>
+    </div>
+    <div class="rival-ia" id="rival-ia-8" style="display:none;margin-top:10px;background:#f4eefb;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;color:var(--texto)">
+      <i class="fas fa-spinner fa-spin"></i> Consultando asesor...
+    </div>
+  </div>
+
+  <div class="rival-card" id="rival-9">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="rival-inicial" style="background:#1a5276">U</div>
+        <div>
+          <div style="font-weight:700;font-size:13px">Ulises David Miranda Guerra</div>
+          <div style="font-size:11px;color:#666">Comunicación, Transparencia, Turismo, Medio Ambiente, Nuevas Tecnologías</div>
+          <div style="font-size:10px;color:#e74c3c;margin-top:2px">💰 9.822,68€/año · Parcial</div>
+        </div>
+      </div>
+      <button onclick="preguntarSobreRival('Ulises David Miranda Guerra, Comunicación, Transparencia, Turismo, Medio Ambiente, Nuevas Tecnologías. Dame argumentos y preguntas para confrontarle en pleno sobre su gestión.')"
+        style="padding:6px 10px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;flex-shrink:0">
+        🤖 IA
+      </button>
+    </div>
+    <div class="rival-ia" id="rival-ia-9" style="display:none;margin-top:10px;background:#f4eefb;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;color:var(--texto)">
+      <i class="fas fa-spinner fa-spin"></i> Consultando asesor...
+    </div>
+  </div>
+
+  <div class="rival-card" id="rival-10">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="rival-inicial" style="background:#117a65">N</div>
+        <div>
+          <div style="font-weight:700;font-size:13px">Nuria Esther Vega Valencia</div>
+          <div style="font-size:11px;color:#666">Prevención Adicciones, Participación Ciudadana, Asociaciones</div>
+          <div style="font-size:10px;color:#e74c3c;margin-top:2px">💰 39.290,86€/año · Exclusiva</div>
+        </div>
+      </div>
+      <button onclick="preguntarSobreRival('Nuria Esther Vega Valencia, Prevención Adicciones, Participación Ciudadana, Asociaciones. Dame argumentos y preguntas para confrontarle en pleno sobre su gestión.')"
+        style="padding:6px 10px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;flex-shrink:0">
+        🤖 IA
+      </button>
+    </div>
+    <div class="rival-ia" id="rival-ia-10" style="display:none;margin-top:10px;background:#f4eefb;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;color:var(--texto)">
+      <i class="fas fa-spinner fa-spin"></i> Consultando asesor...
+    </div>
+  </div>
+
+  <div class="rival-card" id="rival-11">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="rival-inicial" style="background:#1e8bc3">An</div>
+        <div>
+          <div style="font-weight:700;font-size:13px">Ancor Bolaños Delgado</div>
+          <div style="font-size:11px;color:#666">Actividad Física, Deporte y Salud</div>
+          <div style="font-size:10px;color:#e74c3c;margin-top:2px">💰 21.619,50€/año · Parcial</div>
+        </div>
+      </div>
+      <button onclick="preguntarSobreRival('Ancor Bolaños Delgado, Actividad Física, Deporte y Salud. Dame argumentos y preguntas para confrontarle en pleno sobre su gestión.')"
+        style="padding:6px 10px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;flex-shrink:0">
+        🤖 IA
+      </button>
+    </div>
+    <div class="rival-ia" id="rival-ia-11" style="display:none;margin-top:10px;background:#f4eefb;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;color:var(--texto)">
+      <i class="fas fa-spinner fa-spin"></i> Consultando asesor...
+    </div>
+  </div>
+
+  <div class="rival-card" id="rival-12">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="rival-inicial" style="background:#27ae60">Ni</div>
+        <div>
+          <div style="font-weight:700;font-size:13px">Nicolás Pino Mederos Díaz</div>
+          <div style="font-size:11px;color:#666">Parques, Jardines y Embellecimiento</div>
+          <div style="font-size:10px;color:#e74c3c;margin-top:2px">💰 29.468,18€/año · Parcial</div>
+        </div>
+      </div>
+      <button onclick="preguntarSobreRival('Nicolás Pino Mederos Díaz, Parques, Jardines y Embellecimiento. Dame argumentos y preguntas para confrontarle en pleno sobre su gestión.')"
+        style="padding:6px 10px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;flex-shrink:0">
+        🤖 IA
+      </button>
+    </div>
+    <div class="rival-ia" id="rival-ia-12" style="display:none;margin-top:10px;background:#f4eefb;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;color:var(--texto)">
+      <i class="fas fa-spinner fa-spin"></i> Consultando asesor...
+    </div>
+  </div>
+
+  <div class="rival-card" id="rival-13">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="rival-inicial" style="background:#e74c3c">El</div>
+        <div>
+          <div style="font-weight:700;font-size:13px">Eleazar Miguel Rodríguez Díaz</div>
+          <div style="font-size:11px;color:#666">Vivienda, Vías y Obras y Alcantarillado</div>
+          <div style="font-size:10px;color:#e74c3c;margin-top:2px">💰 19.645,50€/año · Parcial</div>
+        </div>
+      </div>
+      <button onclick="preguntarSobreRival('Eleazar Miguel Rodríguez Díaz, Vivienda, Vías y Obras y Alcantarillado. Dame argumentos y preguntas para confrontarle en pleno sobre su gestión.')"
+        style="padding:6px 10px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;flex-shrink:0">
+        🤖 IA
+      </button>
+    </div>
+    <div class="rival-ia" id="rival-ia-13" style="display:none;margin-top:10px;background:#f4eefb;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;color:var(--texto)">
+      <i class="fas fa-spinner fa-spin"></i> Consultando asesor...
+    </div>
+  </div>
+
+  <div class="rival-card" id="rival-14">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="rival-inicial" style="background:#2c3e50">P</div>
+        <div>
+          <div style="font-weight:700;font-size:13px">Pedro Mendoza Vega</div>
+          <div style="font-size:11px;color:#666">Tráfico, Ordenación Vial, Emergencias, Movilidad, Transporte</div>
+          <div style="font-size:10px;color:#e74c3c;margin-top:2px">💰 19.645,50€/año · Parcial</div>
+        </div>
+      </div>
+      <button onclick="preguntarSobreRival('Pedro Mendoza Vega, Tráfico, Ordenación Vial, Emergencias, Movilidad, Transporte. Dame argumentos y preguntas para confrontarle en pleno sobre su gestión.')"
+        style="padding:6px 10px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;flex-shrink:0">
+        🤖 IA
+      </button>
+    </div>
+    <div class="rival-ia" id="rival-ia-14" style="display:none;margin-top:10px;background:#f4eefb;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;color:var(--texto)">
+      <i class="fas fa-spinner fa-spin"></i> Consultando asesor...
+    </div>
+  </div>
+
+  <div class="rival-card" id="rival-15">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="rival-inicial" style="background:#7f8c8d">An</div>
+        <div>
+          <div style="font-weight:700;font-size:13px">Antonia Isabel Moreno Jiménez</div>
+          <div style="font-size:11px;color:#666">Residuos y Limpieza Viaria</div>
+          <div style="font-size:10px;color:#e74c3c;margin-top:2px">💰 19.645,50€/año · Parcial</div>
+        </div>
+      </div>
+      <button onclick="preguntarSobreRival('Antonia Isabel Moreno Jiménez, Residuos y Limpieza Viaria. Dame argumentos y preguntas para confrontarle en pleno sobre su gestión.')"
+        style="padding:6px 10px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;flex-shrink:0">
+        🤖 IA
+      </button>
+    </div>
+    <div class="rival-ia" id="rival-ia-15" style="display:none;margin-top:10px;background:#f4eefb;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;color:var(--texto)">
+      <i class="fas fa-spinner fa-spin"></i> Consultando asesor...
+    </div>
+  </div>
+
+  <div class="rival-card" id="rival-16">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="rival-inicial" style="background:#2980b9">Cr</div>
+        <div>
+          <div style="font-weight:700;font-size:13px">Cristian Jesús Perdomo Bolaños</div>
+          <div style="font-size:11px;color:#666">Agua de Abasto, Alumbrado Público, Mercado y Consumo</div>
+          <div style="font-size:10px;color:#e74c3c;margin-top:2px">💰 29.468,18€/año · Parcial</div>
+        </div>
+      </div>
+      <button onclick="preguntarSobreRival('Cristian Jesús Perdomo Bolaños, Agua de Abasto, Alumbrado Público, Mercado y Consumo. Dame argumentos y preguntas para confrontarle en pleno sobre su gestión.')"
+        style="padding:6px 10px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;flex-shrink:0">
+        🤖 IA
+      </button>
+    </div>
+    <div class="rival-ia" id="rival-ia-16" style="display:none;margin-top:10px;background:#f4eefb;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;color:var(--texto)">
+      <i class="fas fa-spinner fa-spin"></i> Consultando asesor...
+    </div>
+  </div>
+
+  <div class="rival-card" id="rival-17">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="rival-inicial" style="background:#1abc9c">To</div>
+        <div>
+          <div style="font-weight:700;font-size:13px">Antonio María Benítez Melián</div>
+          <div style="font-size:11px;color:#666">Bienestar Animal, Juventud y Club del Mayor</div>
+          <div style="font-size:10px;color:#e74c3c;margin-top:2px">💰 29.468,18€/año · Parcial</div>
+        </div>
+      </div>
+      <button onclick="preguntarSobreRival('Antonio María Benítez Melián, Bienestar Animal, Juventud y Club del Mayor. Dame argumentos y preguntas para confrontarle en pleno sobre su gestión.')"
+        style="padding:6px 10px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;flex-shrink:0">
+        🤖 IA
+      </button>
+    </div>
+    <div class="rival-ia" id="rival-ia-17" style="display:none;margin-top:10px;background:#f4eefb;border-radius:8px;padding:10px;font-size:12px;line-height:1.5;color:var(--texto)">
+      <i class="fas fa-spinner fa-spin"></i> Consultando asesor...
+    </div>
+  </div>
+
+</div></div>
 
 <div class="toast" id="toast"></div>
 
+<!-- ═══ TAB PRENSA ═══ -->
+<div class="tab-content" id="tab-prensa">
+  <div class="post-card">
+    <h3><i class="fas fa-newspaper" style="color:#c0392b"></i> Analizador de Prensa</h3>
+    <p style="font-size:12px;color:#888;margin-bottom:12px">Pega la URL de cualquier artículo. Claude lo lee y te dice qué responder como concejal de UxGC.</p>
+    <label>URL del artículo</label>
+    <input type="url" id="prensa-url" placeholder="https://www.laprovincia.es/...">
+    <label>¿Qué aspecto te interesa? (opcional)</label>
+    <input type="text" id="prensa-foco" placeholder="Ej: el coste, la opinión del alcalde...">
+    <button class="btn-generar" onclick="analizarPrensa()">
+      <i class="fas fa-search"></i> Analizar artículo
+    </button>
+    <div class="post-resultado" id="prensa-resultado"></div>
+    <button class="btn-copiar" id="btnCopiarPrensa" onclick="navigator.clipboard?.writeText(document.getElementById('prensa-resultado').textContent).then(()=>mostrarToast('✅ Copiado'))">
+      <i class="fas fa-copy"></i> Copiar
+    </button>
+  </div>
+</div>
+
+<!-- ═══ TAB PLENOS ═══ -->
+<div class="tab-content" id="tab-pleno">
+  <div class="post-card">
+    <h3><i class="fas fa-gavel" style="color:#1a5276"></i> Preparador de Plenos</h3>
+    <p style="font-size:12px;color:#888;margin-bottom:12px">Introduce el orden del día. Claude te prepara ficha completa para cada punto: qué votar, qué argumentar, qué preguntar.</p>
+    <label>Fecha del pleno</label>
+    <input type="text" id="pleno-fecha" placeholder="Ej: 15 de junio de 2026">
+    <label>Orden del día (un punto por línea)</label>
+    <textarea id="pleno-orden" rows="7" placeholder="1. Aprobación actas&#10;2. Modificación presupuestaria&#10;3. Convenio limpieza&#10;4. Ruegos y preguntas"></textarea>
+    <label>Contexto adicional (opcional)</label>
+    <textarea id="pleno-contexto" rows="2" placeholder="Ej: Hay rumores de que aprobarán el convenio sin informe jurídico..."></textarea>
+    <button class="btn-generar" onclick="prepararPleno()">
+      <i class="fas fa-clipboard-list"></i> Preparar fichas de pleno
+    </button>
+    <div class="post-resultado" id="pleno-resultado"></div>
+    <button class="btn-copiar" id="btnCopiarPleno" onclick="navigator.clipboard?.writeText(document.getElementById('pleno-resultado').textContent).then(()=>mostrarToast('✅ Copiado'))">
+      <i class="fas fa-copy"></i> Copiar
+    </button>
+  </div>
+</div>
+
+<!-- ═══ TAB RUEGOS ═══ -->
+<div class="tab-content" id="tab-ruegos">
+  <div class="post-card">
+    <h3><i class="fas fa-file-signature" style="color:#27ae60"></i> Redactor de Ruegos y Preguntas</h3>
+    <p style="font-size:12px;color:#888;margin-bottom:12px">Describe lo que quieres pedir en lenguaje normal. Claude redacta el texto oficial con formato legal correcto.</p>
+    <label>Tipo de escrito</label>
+    <select id="ruego-tipo">
+      <option value="ruego">Ruego (petición al equipo de gobierno)</option>
+      <option value="pregunta">Pregunta (solicitud de información)</option>
+      <option value="mocion">Moción (propuesta de acuerdo)</option>
+      <option value="enmienda">Enmienda a una propuesta</option>
+    </select>
+    <label>¿Qué quieres pedir o preguntar? (en tus palabras)</label>
+    <textarea id="ruego-texto" rows="4" placeholder="Ej: Quiero preguntar al alcalde por qué no se han arreglado los baches de la Calle Real desde hace 6 meses."></textarea>
+    <label>Dirigido a</label>
+    <select id="ruego-destino">
+      <option value="alcalde">Sr. Alcalde-Presidente</option>
+      <option value="hacienda">Concejal/a de Hacienda</option>
+      <option value="obras">Concejal/a de Obras y Servicios</option>
+      <option value="pleno">Al Pleno Municipal</option>
+    </select>
+    <button class="btn-generar" onclick="redactarRuego()" style="background:linear-gradient(135deg,#27ae60,#1e8449)">
+      <i class="fas fa-pen"></i> Redactar escrito formal
+    </button>
+    <div class="post-resultado" id="ruego-resultado"></div>
+    <button class="btn-copiar" id="btnCopiarRuego" onclick="navigator.clipboard?.writeText(document.getElementById('ruego-resultado').textContent).then(()=>mostrarToast('✅ Copiado'))">
+      <i class="fas fa-copy"></i> Copiar
+    </button>
+  </div>
+</div>
+
+<!-- ═══ TAB DEBATE ═══ -->
+<div class="tab-content" id="tab-debate">
+  <div class="post-card">
+    <h3><i class="fas fa-fist-raised" style="color:#c0392b"></i> Simulador de Debate</h3>
+    <p style="font-size:12px;color:#888;margin-bottom:12px">Ensaya antes del pleno. Escribe el argumento del rival y recibe la réplica exacta con argumentos sólidos.</p>
+    <label>¿Quién te va a atacar?</label>
+    <select id="debate-rival">
+      <option value="alcalde">Alcalde Teodoro Sosa</option>
+      <option value="julio">Julio Mateo (1er Teniente)</option>
+      <option value="hacienda">Concejala de Hacienda</option>
+      <option value="psoe">Francisco Hernández (PSC-PSOE)</option>
+      <option value="otro">Otro concejal</option>
+    </select>
+    <label>¿Qué argumento o ataque te va a lanzar?</label>
+    <textarea id="debate-ataque" rows="4" placeholder="Ej: 'UxGC siempre vota en contra de todo pero nunca propone nada constructivo.'"></textarea>
+    <label>Tema del debate</label>
+    <input type="text" id="debate-tema" placeholder="Ej: presupuesto, obras, fiestas, limpieza...">
+    <button class="btn-generar" onclick="simularDebate()" style="background:linear-gradient(135deg,#c0392b,#e74c3c)">
+      <i class="fas fa-comments"></i> Preparar réplica
+    </button>
+    <div class="post-resultado" id="debate-resultado"></div>
+    <button class="btn-copiar" id="btnCopiarDebate" onclick="navigator.clipboard?.writeText(document.getElementById('debate-resultado').textContent).then(()=>mostrarToast('✅ Copiado'))">
+      <i class="fas fa-copy"></i> Copiar
+    </button>
+  </div>
+</div>
+
+<!-- ═══ TAB DOCUMENTOS ═══ -->
+<div class="tab-content" id="tab-documentos">
+  <div class="post-card">
+    <h3><i class="fas fa-file-alt" style="color:#8e44ad"></i> Traductor de Documentos Oficiales</h3>
+    <p style="font-size:12px;color:#888;margin-bottom:12px">Pega el texto de cualquier BOC, decreto, contrato o acta. Claude te explica qué significa realmente para Gáldar.</p>
+    <label>Tipo de documento</label>
+    <select id="doc-tipo">
+      <option value="boc">BOC (Boletín Oficial de Canarias)</option>
+      <option value="decreto">Decreto de Alcaldía</option>
+      <option value="contrato">Contrato o pliego de licitación</option>
+      <option value="presupuesto">Presupuesto o modificación</option>
+      <option value="acta">Acta de pleno anterior</option>
+      <option value="otro">Otro documento oficial</option>
+    </select>
+    <label>Pega el texto del documento</label>
+    <textarea id="doc-texto" rows="10" placeholder="Pega aquí el texto completo del documento oficial..."></textarea>
+    <label>¿Qué te interesa saber? (opcional)</label>
+    <input type="text" id="doc-foco" placeholder="Ej: si hay algo irregular, qué coste tiene...">
+    <button class="btn-generar" onclick="traducirDocumento()" style="background:linear-gradient(135deg,#8e44ad,#9b59b6)">
+      <i class="fas fa-language"></i> Analizar documento
+    </button>
+    <div class="post-resultado" id="doc-resultado"></div>
+    <button class="btn-copiar" id="btnCopiarDoc" onclick="navigator.clipboard?.writeText(document.getElementById('doc-resultado').textContent).then(()=>mostrarToast('✅ Copiado'))">
+      <i class="fas fa-copy"></i> Copiar
+    </button>
+  </div>
+</div>
+
+<!-- ═══ TAB VECINOS COMUNICADOR ═══ -->
+<div class="tab-content" id="tab-vecinos2">
+  <div class="post-card">
+    <h3><i class="fas fa-bullhorn" style="color:#e67e22"></i> Comunicador de Barrio</h3>
+    <p style="font-size:12px;color:#888;margin-bottom:12px">Cualquier tema político o técnico convertido en lenguaje de vecino. Listo para WhatsApp, Facebook o papel.</p>
+    <label>¿Qué quieres comunicar?</label>
+    <textarea id="vecinos-texto" rows="5" placeholder="Ej: El ayuntamiento ha aprobado gastar 80.000€ en obras sin concurso público. UxGC votó en contra."></textarea>
+    <label>Formato de salida</label>
+    <select id="vecinos-formato">
+      <option value="whatsapp">Mensaje WhatsApp (máx. 3 párrafos)</option>
+      <option value="facebook">Post Facebook (con gancho y emojis)</option>
+      <option value="papel">Nota para buzones o tablón</option>
+      <option value="respuesta">Respuesta a queja de vecino</option>
+      <option value="declaracion">Declaración pública ante polémica</option>
+    </select>
+    <label>Tono</label>
+    <select id="vecinos-tono">
+      <option value="cercano">Cercano y directo</option>
+      <option value="firme">Firme y contundente</option>
+      <option value="informativo">Informativo y objetivo</option>
+      <option value="positivo">Positivo y constructivo</option>
+    </select>
+    <button class="btn-generar" onclick="comunicarVecinos()" style="background:linear-gradient(135deg,#e67e22,#d35400)">
+      <i class="fas fa-paper-plane"></i> Generar comunicado
+    </button>
+    <div class="post-resultado" id="vecinos2-resultado"></div>
+    <button class="btn-copiar" id="btnCopiarVecinos" onclick="navigator.clipboard?.writeText(document.getElementById('vecinos2-resultado').textContent).then(()=>mostrarToast('✅ Copiado'))">
+      <i class="fas fa-copy"></i> Copiar
+    </button>
+  </div>
+</div>
+
 <script>
 // ══════════════════════════════════
-// FIREBASE CONFIG
+// FIREBASE
 // ══════════════════════════════════
 const firebaseConfig = {
   apiKey: "AIzaSyC9HkQ9RLXQ3hVYNdFvTHhSGknC8sXKDkU",
@@ -564,380 +1090,506 @@ const firebaseConfig = {
   messagingSenderId: "123456789",
   appId: "1:123456789:web:abcdef123456"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const storage = firebase.storage();
 
 // ══════════════════════════════════
-// VARIABLES GLOBALES
+// CREDENCIALES
 // ══════════════════════════════════
-let gpsLat = null, gpsLng = null;
-let fotoBase64 = null;
-let reconocimiento = null;
-let grabandoVoz = false;
-let mapaLeaflet = null;
-let tipoSeleccionado = 'queja';
-
-function selTipo(tipo) {
-  tipoSeleccionado = tipo;
-  document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tipo-' + tipo).classList.add('active');
-}
-
-// ALERTAS POR BARRIO
-const alertasBarrio = {
-  "Centro": "⚠️ Zona con alta incidencia de iluminación deficiente. Revisa el estado del alumbrado.",
-  "El Calvario": "⚠️ Zona con quejas frecuentes de limpieza en contenedores.",
-  "Sardina del Norte": "⚠️ Zona costera: verifica el estado de accesos y limpieza de playas.",
-  "Puerto de Sardina": "⚠️ Zona portuaria con incidencias de limpieza y mantenimiento recurrentes.",
-  "Juncalillo": "⚠️ Zona rural: incidencias frecuentes en caminos y carreteras.",
-  "Caideros": "⚠️ Zona con accesos en mal estado reportados frecuentemente."
-};
-
-// SUBCATEGORÍAS
-const subcats = {
-  limpieza: ["Contenedores llenos","Basura en la vía","Solares con residuos","Limpieza de playas","Recogida selectiva"],
-  iluminacion: ["Farola apagada","Cable peligroso","Falta iluminación zona","Parpadeo/avería"],
-  vias: ["Bache en calzada","Acera rota","Señalización dañada","Obstáculo en la vía","Pintadas/grafitis"],
-  agua: ["Fuga de agua","Alcantarilla atascada","Agua en la calzada","Falta presión"],
-  zonas_verdes: ["Poda necesaria","Parque en mal estado","Riego deficiente","Zona verde sucia"],
-  seguridad: ["Actividad sospechosa","Zona mal iluminada","Pintadas","Vehículo abandonado"],
-  ruido: ["Música alta","Obras nocturnas","Locales nocturnos","Ruido de tráfico"],
-  edificios: ["Solar sin vallar","Edificio en ruinas","Pintadas","Riesgo de derrumbe"],
-  transporte: ["Parada en mal estado","Semáforo averiado","Señal caída","Aparcamiento ilegal"],
-  otros: ["Otro tipo de queja"]
+const USUARIOS = {
+  'blas': 'galdar2024',
+  'admin': 'galdar2024',
+  'concejal': 'uxgc2024'
 };
 
 // ══════════════════════════════════
-// TABS
+// ESTADO
 // ══════════════════════════════════
-function mostrarTab(id) {
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + id).classList.add('active');
-  document.getElementById('tb-' + id).classList.add('active');
-  if (id === 'mapa') iniciarMapa();
-  if (id === 'stats') cargarEstadisticas();
-  if (id === 'ideas') cargarIdeas();
-}
+let todasQuejas = {};
+let mapaPanel = null;
+let chatHistory = [];
+let postActual = '';
+let notaActual = '';
 
 // ══════════════════════════════════
-// GPS
+// LOGIN
 // ══════════════════════════════════
-function activarGPS() {
-  if (!navigator.geolocation) {
-    mostrarToast('GPS no disponible en este dispositivo');
-    return;
+function doLogin() {
+  const u = document.getElementById('loginUser').value.trim().toLowerCase();
+  const p = document.getElementById('loginPass').value;
+  if (USUARIOS[u] && USUARIOS[u] === p) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    iniciarApp();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
   }
-  mostrarToast('Obteniendo ubicación...');
-  navigator.geolocation.getCurrentPosition(pos => {
-    gpsLat = pos.coords.latitude;
-    gpsLng = pos.coords.longitude;
-    document.getElementById('gpsInfo').style.display = 'flex';
-    document.getElementById('gpsTexto').textContent =
-      `📍 ${gpsLat.toFixed(5)}, ${gpsLng.toFixed(5)} (±${Math.round(pos.coords.accuracy)}m)`;
-    mostrarToast('✅ Ubicación capturada');
-  }, err => {
-    document.getElementById('gpsInfo').className = 'gps-info gps-error';
-    document.getElementById('gpsInfo').style.display = 'flex';
-    document.getElementById('gpsTexto').textContent = 'No se pudo obtener la ubicación. Activa el GPS.';
+}
+
+function logout() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+}
+
+// ══════════════════════════════════
+// INICIAR APP
+// ══════════════════════════════════
+function iniciarApp() {
+  db.ref('quejas').on('value', snap => {
+    todasQuejas = snap.val() || {};
+    actualizarStats();
+    renderQuejas();
+  });
+  db.ref('ideas').once('value', snap => {
+    const ideas = snap.val() || {};
+    const pleno = Object.values(ideas).filter(i => i.parPleno).length;
+    if (pleno > 0) {
+      document.getElementById('badgeIdeas').textContent = pleno;
+      document.getElementById('badgeIdeas').style.display = 'inline';
+    }
+    renderIdeas(ideas);
   });
 }
 
 // ══════════════════════════════════
-// ALERTA BARRIO
+// TABS
 // ══════════════════════════════════
-function checkAlertaBarrio() {
-  const barrio = document.getElementById('selBarrio').value;
-  const div = document.getElementById('alertaBarrio');
-  const txt = document.getElementById('textoAlerta');
-  if (alertasBarrio[barrio]) {
-    txt.textContent = alertasBarrio[barrio];
-    div.style.display = 'block';
-  } else {
-    div.style.display = 'none';
-  }
+function tab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  document.getElementById('tb-' + id).classList.add('active');
+  if (id === 'mapa') iniciarMapaPanel();
 }
 
 // ══════════════════════════════════
-// SUBCATEGORÍAS
+// STATS
 // ══════════════════════════════════
-function actualizarSubcats() {
-  const cat = document.getElementById('selCategoria').value;
-  const sel = document.getElementById('selSubcat');
-  sel.innerHTML = '<option value="">— Selecciona tipo —</option>';
-  if (subcats[cat]) {
-    subcats[cat].forEach(s => {
-      const o = document.createElement('option');
-      o.value = s; o.textContent = s;
-      sel.appendChild(o);
+function actualizarStats() {
+  const arr = Object.values(todasQuejas);
+  document.getElementById('stTotal').textContent = arr.length;
+  document.getElementById('stPendientes').textContent = arr.filter(q => q.estado === 'pendiente').length;
+  document.getElementById('stUrgentes').textContent = arr.filter(q => q.urgencia === 'muy_urgente' || q.urgencia === 'urgente').length;
+  document.getElementById('stResueltas').textContent = arr.filter(q => q.estado === 'resuelto').length;
+  document.getElementById('badgeQuejas').textContent = arr.filter(q => q.estado === 'pendiente').length;
+}
+
+// ══════════════════════════════════
+// RENDER QUEJAS
+// ══════════════════════════════════
+function renderQuejas() {
+  const filtroE = document.getElementById('filtroEstado').value;
+  const filtroC = document.getElementById('filtroCat').value;
+  const filtroU = document.getElementById('filtroUrgencia').value;
+
+  let arr = Object.entries(todasQuejas).map(([k, v]) => ({...v, _id: k}));
+
+  if (filtroE) arr = arr.filter(q => q.estado === filtroE);
+  if (filtroC) arr = arr.filter(q => q.categoria === filtroC);
+  if (filtroU) arr = arr.filter(q => q.urgencia === filtroU);
+
+  arr.sort((a, b) => {
+    const urgOrd = { muy_urgente: 0, urgente: 1, normal: 2 };
+    return (urgOrd[a.urgencia] ?? 2) - (urgOrd[b.urgencia] ?? 2) || (b.timestamp || 0) - (a.timestamp || 0);
+  });
+
+  if (!arr.length) {
+    document.getElementById('listaQuejas').innerHTML = '<div class="spinner">No hay quejas con estos filtros</div>';
+    return;
+  }
+
+  document.getElementById('listaQuejas').innerHTML = arr.map(q => `
+    <div class="queja-card ${q.urgencia === 'muy_urgente' ? 'muy_urgente' : q.urgencia === 'urgente' ? 'urgente' : ''} ${q.estado === 'resuelto' ? 'resuelto' : ''}" id="qcard-${q._id}">
+      <div class="queja-header">
+        <div>
+          <div class="queja-barrio">📍 ${q.barrio || 'Sin barrio'}${q.calle ? ' — ' + q.calle : ''}</div>
+          <div class="queja-cat">${q.categoria || ''} ${q.subcategoria ? '· ' + q.subcategoria : ''}</div>
+        </div>
+        <div>
+          <span class="badge-estado badge-${q.urgencia === 'muy_urgente' ? 'muy_urgente' : q.urgencia === 'urgente' ? 'urgente' : (q.estado || 'pendiente')}">${
+            q.urgencia === 'muy_urgente' ? '🔴 MUY URGENTE' :
+            q.urgencia === 'urgente' ? '🟡 URGENTE' :
+            q.estado === 'resuelto' ? '✅ Resuelto' :
+            q.estado === 'en_proceso' ? '🔄 En proceso' :
+            q.estado === 'descartado' ? '❌ Descartado' : '⏳ Pendiente'
+          }</span>
+        </div>
+      </div>
+      <div class="queja-desc">${q.descripcion || ''}</div>
+      <div class="queja-meta">
+        <span><i class="fas fa-calendar"></i> ${q.fecha || '—'}</span>
+        ${q.nombre ? '<span><i class="fas fa-user"></i> ' + q.nombre + '</span>' : ''}
+        ${q.telefono ? '<span><i class="fas fa-phone"></i> ' + q.telefono + '</span>' : ''}
+        ${q.lat ? '<span><i class="fas fa-map-pin"></i> GPS ✅</span>' : ''}
+        ${q.foto === 'si' ? '<span><i class="fas fa-camera"></i> Foto</span>' : ''}
+      </div>
+      <div class="queja-acciones">
+        <button class="btn-accion btn-proceso" onclick="cambiarEstado('${q._id}','en_proceso')"><i class="fas fa-sync"></i> En proceso</button>
+        <button class="btn-accion btn-resuelto" onclick="cambiarEstado('${q._id}','resuelto')"><i class="fas fa-check"></i> Resuelto</button>
+        <button class="btn-accion btn-descartar" onclick="cambiarEstado('${q._id}','descartado')"><i class="fas fa-times"></i> Descartar</button>
+        <button class="btn-accion btn-ia" onclick="analizarIA('${q._id}')"><i class="fas fa-robot"></i> IA</button>
+        ${q.telefono ? '<button class="btn-accion btn-whatsapp" onclick="contactarVecino(\'' + q.telefono + '\',\'' + (q.barrio||'') + '\')"><i class="fab fa-whatsapp"></i></button>' : ''}
+      </div>
+      <div class="ia-panel" id="ia-${q._id}">
+        <h4><i class="fas fa-robot"></i> Análisis IA</h4>
+        <div class="ia-resp" id="ia-resp-${q._id}"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════
+// CAMBIAR ESTADO
+// ══════════════════════════════════
+function cambiarEstado(id, estado) {
+  db.ref('quejas/' + id).update({ estado });
+  mostrarToast(`✅ Estado actualizado: ${estado}`);
+}
+
+// ══════════════════════════════════
+// CONTACTAR VECINO
+// ══════════════════════════════════
+function contactarVecino(tel, barrio) {
+  const msg = `Hola, soy José Blas Díaz, concejal de UxGC en Gáldar. He recibido tu queja sobre ${barrio} y la estamos tramitando. ¿Puedes darme más detalles?`;
+  window.open(`https://wa.me/34${tel.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+// ══════════════════════════════════
+// ANÁLISIS IA QUEJA
+// ══════════════════════════════════
+async function analizarIA(id) {
+  const panel = document.getElementById('ia-' + id);
+  const resp = document.getElementById('ia-resp-' + id);
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  if (panel.style.display === 'none') return;
+
+  const q = todasQuejas[id];
+  resp.innerHTML = '<div class="ia-loading"><i class="fas fa-spinner fa-spin"></i> Analizando...</div>';
+
+  try {
+    const res = await fetch('https://orange-boat-6d42.pedrosaborrego.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `Eres el asesor político de José Blas Díaz Bolaños, concejal de Unidos por Gran Canaria (UxGC) en Gáldar, Gran Canaria. Está en la oposición frente a un alcalde con 19/21 concejales. Tu análisis debe ser conciso, práctico y orientado a maximizar el impacto político de cada queja.`,
+        messages: [{ role: 'user', content: `Analiza esta queja ciudadana y dame: 1) Urgencia real (1-10), 2) Impacto político para UxGC, 3) Acción recomendada, 4) Si es útil para el próximo pleno.\n\nQueja: Barrio ${q.barrio}, ${q.categoria}${q.subcategoria ? ' - ' + q.subcategoria : ''}, urgencia declarada: ${q.urgencia}.\n\nDescripción: ${q.descripcion}` }]
+      })
     });
+    const data = await res.json();
+    resp.textContent = data.content?.[0]?.text || 'Sin respuesta';
+  } catch(e) {
+    resp.textContent = 'Error al conectar con IA: ' + e.message;
   }
 }
 
 // ══════════════════════════════════
-// RECONOCIMIENTO VOZ
+// GENERADOR POSTS
 // ══════════════════════════════════
-function crearReconocimiento(campoId, btnId, labelParado, labelGrabando) {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) { mostrarToast('Voz no disponible en este navegador'); return null; }
+async function generarPost() {
+  const tipo = document.getElementById('tipoPost').value;
+  const tema = document.getElementById('temaPost').value;
+  const detalles = document.getElementById('detallesPost').value;
+  const tono = document.getElementById('tonoPost').value;
 
-  const r = new SpeechRecognition();
-  r.lang = 'es-ES';
-  r.continuous = false;
-  r.interimResults = false;
-  r.maxAlternatives = 1;
+  if (!tema) { mostrarToast('⚠️ Escribe el tema del post'); return; }
 
-  const btn = document.getElementById(btnId);
+  const resultDiv = document.getElementById('postResultado');
+  resultDiv.style.display = 'block';
+  resultDiv.innerHTML = '<div class="ia-loading"><i class="fas fa-spinner fa-spin"></i> Generando post...</div>';
 
-  r.onstart = () => {
-    btn.classList.add('grabando');
-    btn.innerHTML = '<i class="fas fa-stop"></i> ' + labelGrabando;
-    grabandoVoz = true;
-    mostrarToast('🎤 Escuchando... habla ahora');
+  const tonosMap = {
+    cercano: 'cercano, directo y próximo al ciudadano de a pie',
+    firme: 'firme, contundente y seguro, sin atacar personalmente',
+    institucional: 'institucional y formal',
+    informativo: 'informativo y objetivo con datos'
   };
-  r.onresult = ev => {
-    const txt = ev.results[0][0].transcript;
-    const campo = document.getElementById(campoId);
-    campo.value = (campo.value ? campo.value + ' ' : '') + txt;
-    mostrarToast('✅ ' + txt.substring(0,40) + (txt.length>40?'...':''));
-  };
-  r.onerror = ev => {
-    mostrarToast('Error: ' + (ev.error === 'no-speech' ? 'No se detectó voz' : ev.error));
-  };
-  r.onend = () => {
-    grabandoVoz = false;
-    btn.classList.remove('grabando');
-    btn.innerHTML = '<i class="fas fa-microphone"></i> ' + labelParado;
-    reconocimiento = null;
-  };
-  return r;
-}
-
-function iniciarVoz(e) {
-  if (e) { e.preventDefault(); e.stopPropagation(); }
-  if (grabandoVoz && reconocimiento) { reconocimiento.stop(); return; }
-  reconocimiento = crearReconocimiento('descripcion', 'btnVoz', 'Hablar descripción', 'Detener');
-  if (reconocimiento) reconocimiento.start();
-}
-
-function iniciarVozIdea(e) {
-  if (e) { e.preventDefault(); e.stopPropagation(); }
-  if (grabandoVoz && reconocimiento) { reconocimiento.stop(); return; }
-  reconocimiento = crearReconocimiento('idea', 'btnVozIdea', 'Hablar propuesta', 'Detener');
-  if (reconocimiento) reconocimiento.start();
-}
-
-// ══════════════════════════════════
-// FOTO
-// ══════════════════════════════════
-function previsualizarFoto(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    document.getElementById('fotoPreview').src = ev.target.result;
-    document.getElementById('fotoPreview').style.display = 'block';
-    fotoBase64 = ev.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-// ══════════════════════════════════
-// ENVIAR QUEJA
-// ══════════════════════════════════
-async function enviarQueja() {
-  const barrio = document.getElementById('selBarrio').value;
-  const categoria = document.getElementById('selCategoria').value;
-  const descripcion = document.getElementById('descripcion').value.trim();
-
-  if (!barrio) { mostrarToast('⚠️ Selecciona el barrio'); return; }
-  if (!categoria) { mostrarToast('⚠️ Selecciona la categoría'); return; }
-  if (!descripcion) { mostrarToast('⚠️ Escribe una descripción'); return; }
-
-  const btn = document.getElementById('btnEnviar');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-
-  const queja = {
-    tipo: tipoSeleccionado,
-    barrio,
-    calle: document.getElementById('calle').value,
-    categoria,
-    subcategoria: document.getElementById('selSubcat').value,
-    urgencia: document.getElementById('selUrgencia').value,
-    descripcion,
-    nombre: document.getElementById('nombre').value,
-    telefono: document.getElementById('telefono').value,
-    lat: gpsLat,
-    lng: gpsLng,
-    foto: fotoBase64 ? 'si' : 'no',
-    estado: 'pendiente',
-    timestamp: Date.now(),
-    fecha: new Date().toLocaleString('es-ES')
+  const tiposMap = {
+    gestion: 'comunicar una gestión o trámite realizado',
+    queja: 'informar sobre una queja ciudadana resuelta o en proceso',
+    propuesta: 'presentar una propuesta al pleno municipal',
+    denuncia: 'denunciar una irregularidad del equipo de gobierno',
+    logro: 'celebrar un logro conseguido',
+    pleno: 'informar sobre una intervención en pleno'
   };
 
   try {
-    await db.ref('quejas').push(queja);
-
-    // Notificación Telegram
-    try {
-      const tipoEmoji = {queja:'⚠️',sugerencia:'💡',denuncia:'🚨',felicitacion:'👍'};
-      const msg = `${tipoEmoji[tipoSeleccionado]||'📢'} *${tipoSeleccionado.toUpperCase()} en Gáldar*\n\n📍 *${barrio}*${queja.calle ? ' - ' + queja.calle : ''}\n🏷️ ${categoria} ${queja.subcategoria ? '· ' + queja.subcategoria : ''}\n⚡ ${queja.urgencia}\n\n📝 ${descripcion.substring(0,200)}${descripcion.length > 200 ? '...' : ''}`;
-      const TOKEN = '8772067102:AAEY1iECbdTnZl9-5_KgvdT1ObqCosAzJUM';
-      const CHATS = ['8601457137', '8655270396'];
-      for (const chat_id of CHATS) {
-        await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chat_id, text: msg, parse_mode: 'Markdown' })
-        });
-      }
-    } catch(e) { /* Telegram no crítico */ }
-
-    document.getElementById('estadoOk').style.display = 'block';
-    btn.style.display = 'none';
-  } catch(err) {
-    document.getElementById('estadoError').style.display = 'block';
-    document.getElementById('textoError').textContent = err.message;
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar queja al concejal';
+    const res = await fetch('https://orange-boat-6d42.pedrosaborrego.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `Eres el community manager político de José Blas Díaz Bolaños, concejal de UxGC en Gáldar, Gran Canaria. Redactas posts para su página de Facebook. Estilo ${tonosMap[tono]}. Incluye emojis relevantes. Máximo 250 palabras. Cierra siempre con #Gáldar #UxGC #JoséBlas o similar. No incluyas ningún texto introductorio, solo el post.`,
+        messages: [{ role: 'user', content: `Genera un post de Facebook para ${tiposMap[tipo]}.\n\nTema: ${tema}\n${detalles ? 'Detalles: ' + detalles : ''}` }]
+      })
+    });
+    const data = await res.json();
+    postActual = data.content?.[0]?.text || '';
+    resultDiv.textContent = postActual;
+    document.getElementById('btnCopiar').style.display = 'inline-flex';
+    document.getElementById('btnFb').style.display = 'inline-flex';
+  } catch(e) {
+    resultDiv.textContent = 'Error: ' + e.message;
   }
 }
 
-function nuevaQueja() {
-  document.getElementById('estadoOk').style.display = 'none';
-  document.getElementById('btnEnviar').style.display = 'flex';
-  document.getElementById('btnEnviar').disabled = false;
-  document.getElementById('descripcion').value = '';
-  document.getElementById('selBarrio').value = '';
-  document.getElementById('selCategoria').value = '';
-  document.getElementById('nombre').value = '';
-  document.getElementById('telefono').value = '';
-  document.getElementById('fotoPreview').style.display = 'none';
-  document.getElementById('gpsInfo').style.display = 'none';
-  gpsLat = null; gpsLng = null; fotoBase64 = null;
-  window.scrollTo(0, 0);
+async function generarNota() {
+  const tema = document.getElementById('temaNota').value;
+  if (!tema) { mostrarToast('⚠️ Escribe el tema de la nota'); return; }
+
+  const resultDiv = document.getElementById('notaResultado');
+  resultDiv.style.display = 'block';
+  resultDiv.innerHTML = '<div class="ia-loading"><i class="fas fa-spinner fa-spin"></i> Generando nota...</div>';
+
+  try {
+    const res = await fetch('https://orange-boat-6d42.pedrosaborrego.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: 'Eres redactor de notas de prensa para José Blas Díaz Bolaños, concejal de UxGC en Gáldar (oposición). Formato periodístico: TITULAR, SUBTÍTULO, CUERPO (3 párrafos), CIERRE con datos de contacto. Tono formal. Solo el texto de la nota, sin explicaciones.',
+        messages: [{ role: 'user', content: `Nota de prensa sobre: ${tema}` }]
+      })
+    });
+    const data = await res.json();
+    notaActual = data.content?.[0]?.text || '';
+    resultDiv.textContent = notaActual;
+    document.getElementById('btnCopiarNota').style.display = 'inline-flex';
+  } catch(e) {
+    resultDiv.textContent = 'Error: ' + e.message;
+  }
+}
+
+function copiarPost() {
+  navigator.clipboard?.writeText(postActual).then(() => mostrarToast('✅ Post copiado'));
+}
+function copiarNota() {
+  navigator.clipboard?.writeText(notaActual).then(() => mostrarToast('✅ Nota copiada'));
+}
+function abrirFacebook() {
+  window.open('https://www.facebook.com', '_blank');
 }
 
 // ══════════════════════════════════
-// MAPA LEAFLET
+// IDEAS PANEL
 // ══════════════════════════════════
-function iniciarMapa() {
-  if (mapaLeaflet) return;
+function renderIdeas(ideas) {
+  const arr = Object.values(ideas).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+  if (!arr.length) {
+    document.getElementById('listaIdeasPanel').innerHTML = '<div class="spinner">Sin ideas de momento</div>';
+    return;
+  }
+  document.getElementById('listaIdeasPanel').innerHTML = arr.map(i => `
+    <div class="idea-item ${i.parPleno ? 'idea-pleno' : ''}">
+      <div style="font-size:13px;line-height:1.5">${i.texto}</div>
+      <div style="font-size:11px;color:#aaa;margin-top:4px">
+        ${i.parPleno ? '🏛️ <strong>Para el pleno</strong> · ' : ''}${i.fecha || ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════
+// ASESOR IA CHAT
+// ══════════════════════════════════
+async function enviarChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  agregarMensaje('user', msg);
+  chatHistory.push({ role: 'user', content: msg });
+
+  agregarMensaje('ia', '<i class="fas fa-spinner fa-spin"></i> Pensando...');
+
+  try {
+    const res = await fetch('https://orange-boat-6d42.pedrosaborrego.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `Eres el asesor político personal de José Blas Díaz Bolaños. Conoces todo sobre él y su entorno político. Aquí está su perfil completo:
+
+## QUIÉN ES JOSÉ BLAS
+- Nació el 3 de febrero de 1968 en Gáldar, entre los barrios de Nido Cuervo y El Agujero — es del pueblo, conoce cada rincón.
+- Formación: FP, Agente Comercial. Empresario agrícola (plátano y vino), sector industrial (pinturas). Delegado Canarias de Pinturas Tarracol. Administrador de Mittelcolor S.L. Actualmente Delegado zona Norte de Industrias Juno S.A.
+- Presidente de la SAT Nido Cuervo, Vicepresidente de la Cooperativa Guía-Gáldar, fue presidente del CL Unión Gáldar.
+- Lleva en política desde 1990: PP (secretario local 6 años), Coalición Canaria desde 2010, concejal en 2011, 2015, 2019 y 2023. Portavoz del grupo mixto. Presidente local de UxGC en Gáldar.
+
+## SU ESTILO Y PERSONALIDAD POLÍTICA
+- Estilo en pleno: COMEDIDO — no confronta directamente, argumenta con datos y serenidad.
+- Marca personal: EL HOMBRE DEL PUEBLO — conoce Gáldar desde dentro, habla de tú a tú con los vecinos.
+- Carisma: PÚBLICO — conecta bien con la gente, le reconocen en la calle.
+- Tema fuerte: AGRICULTURA — conoce el sector platanero y vinícola mejor que nadie en el consistorio.
+- Trabaja con EQUIPO de apoyo.
+- Presente en FACEBOOK principalmente.
+- Es RESPETADO incluso por el equipo de gobierno.
+- Tiene BUENA RELACIÓN con algún concejal del gobierno — úsalo para información y para mostrar capacidad de diálogo.
+
+## EL CONSISTORIO DE GÁLDAR (2023-2027)
+### ALCALDE
+- **Teodoro Sosa Monzón** (BNR-NC) — alcalde desde 2007, 19 años en el poder. Obtuvo 78,84% votos en 2023, el más alto de España en municipios +20.000 hab. Su punto débil: la GESTIÓN ECONÓMICA (reconocimiento extrajudicial de créditos, gastos irregulares). Blas le confronta en pleno con datos, no con ataques personales.
+
+### EQUIPO DE GOBIERNO BNR-NC (19 concejales)
+- **Onalia Bueno García** — 1ª Teniente Alcalde, Hacienda y Policía Local
+- **Raúl Martel Álamo** — 2º Teniente, Urbanismo y Obras
+- **Carmen Rosa Suárez** — 3ª Teniente, Educación y Cultura  
+- **Victorina Ojeda** — 4ª Teniente, Servicios Sociales y Mayores
+- **Alexis Castellano** — 5º Teniente, Desarrollo Local y Turismo
+- **Esteban Fumero** — 6º Teniente, Medio Ambiente
+- **Carmelo Vega** — 7º Teniente, Deportes
+- **Nicolás Mederos Díaz** — Parques, Jardines y Embellecimiento
+- **Ancor Bolaños Delgado** — Actividad Física, Deporte y Salud
+- **Nuria Esther Vega Valencia** — Participación Ciudadana y Barrios
+- **Eleazar Rodríguez Díaz** — Vivienda, Vías y Obras
+- **Pedro Mendoza Vega** — Tráfico y Movilidad
+- **Antonia Isabel Moreno Jiménez** — Residuos y Limpieza
+- **Cristian Perdomo Bolaños** — Alumbrado y Agua
+- **Antonio María Benítez Melián** — Juventud y Bienestar Animal
+
+### OPOSICIÓN (Grupo Mixto — 2 concejales)
+- **José Blas Díaz Bolaños** (UxGC) — Portavoz
+- **Francisco J. Hernández Rosales** (PSC-PSOE) — van por SEPARADO, no coordinan
+
+## BARRIO CLAVE: MÁRMOLEJO
+- Es el barrio donde Blas tiene más implantación y apoyo. Prioriza sus acciones aquí.
+
+## ESTRATEGIA HACIA 2027
+- Objetivo: crecer de 1 a 3-4 concejales. Necesita visibilidad constante.
+- Táctica: OPOSICIÓN EFICAZ — no obstruccionista, sino constructiva con propuestas reales.
+- Aprovechar las quejas ciudadanas como munición política en plenos.
+- Potenciar su imagen de empresario conocedor de la realidad del pueblo.
+- Facebook como canal principal de comunicación con los vecinos.
+- La agricultura y la gestión económica son sus dos temas más fuertes.
+
+## PERFIL RIVAL CLAVE: JULIO MATEO CASTILLO — 1ER TENIENTE ALCALDE
+- Nacido 1/3/1991 en La Montaña, Gáldar. Joven (34 años), formado en Sociología y CC.Políticas (Carlos III Madrid).
+- Director desde 2006 de GáldarEsNoticia y GáldarAhora — CONTROLA LA NARRATIVA MEDIÁTICA LOCAL. Punto débil: conflicto de interés entre su rol de concejal y sus medios de comunicación locales.
+- Cartera actual: 1er Teniente Alcalde + Presidencia (Contratación, Secretaría, Registro, Asesoría Jurídica) + Cultura y Fiestas + Portavoz BNR-NC.
+- Es el NÚMERO DOS del alcalde y su delfín político. Si cae Teodoro, Julio es el sucesor natural.
+MUNICIÓN SOBRE FIESTAS:
+- Lleva desde 2015 gestionando Cultura y Fiestas — casi 10 años controlando ese presupuesto.
+- Fiestas Mayores de Santiago: evento de todo el mes de julio con artistas nacionales, escenarios de 18m x 6m (más de 200m²) cada año, diseñados por empresa externa XHOXB Intervenciones Artísticas.
+- Festival Internacional de Cine (FIC Gáldar 2025): presupuesto de 120.000€ reconocido públicamente.
+- Circuito La Cultura en tu barrio 2025: 38.250€ (récord, subió 7% respecto al año anterior).
+- VIAJE A NUEVA ORLEÁNS: En 2016 la oposición (PP, CC, UxGC, PSOE) le denunció junto al alcalde por viaje institucional. El alcalde respondió que se lo pagaron ellos mismos — pero el episodio muestra patrón de gastos cuestionables.
+ÁNGULOS DE ATAQUE PARA BLAS:
+- Pedir desglose público del presupuesto anual de Fiestas — nunca se ha dado cifra total.
+- ¿Cuánto cuesta el escenario de las Fiestas de Santiago cada año? XHOXB lleva años contratada — ¿concurso público o adjudicación directa?
+- Comparar gasto en fiestas vs gasto en servicios sociales — argumento muy potente.
+- Conflicto de interés: ¿han recibido sus medios (GáldarEsNoticia, GáldarAhora) publicidad institucional del Ayuntamiento mientras él es concejal?
+- El FIC 2025 trajo a Samuel L. Jackson y John Travolta — ¿cuánto costó realmente? 120.000€ declarados parece poco para ese nivel.
+
+## NOTICIAS Y MUNICIÓN POLÍTICA RECIENTE
+
+### PLENO ABRIL 2026 — 3,5 MILLONES SUPERÁVIT (01/05/2026)
+El pleno aprobó liberar 3,5M€ del superávit de 2024 para 4 obras:
+1. Aparcamiento antiguo IES Saulo Torón — 3,5M€ (2,5M Cabildo + 1M Ayto)
+2. Acceso rodado barrio La Montaña desde Paseo Guanartemes — 845.000€ (100% Ayto)
+3. Campo fútbol 7 Antonio Castillo en Barrial — ~500.000€ (100% Ayto)
+4. Parque urbano Calle Delgado — 2,9M€ (1,7M Gobierno Canarias + 1,2M Ayto)
+Total obras: 7,7M€. Alcalde dice que en 2024 ahorraron 7M€ gracias a "buena gestión".
+Concejala de Hacienda: Valeria Guerra (OJO — el organigrama oficial dice Onalia Bueno, puede haber cambio de cartera).
+ÁNGULO DE ATAQUE PARA BLAS:
+- ¿Por qué se aprueba en abril si el superávit es de 2024? ¿Cuánto tiempo lleva pendiente?
+- El campo de fútbol y el aparcamiento: ¿necesidad real o rédito electoral de cara a 2027?
+- La Montaña lleva años pidiendo mejor acceso — ¿por qué ahora y no antes?
+- Exigir calendario concreto de ejecución — deben acabar antes del 31/12/2027
+- Pedir auditoría independiente del superávit real vs gastos irregulares anteriores
+- Contraargumento: si hay 7M de superávit, ¿por qué hubo reconocimientos extrajudiciales de crédito?
+
+## TU MISIÓN COMO ASESOR
+- Hablas directamente a Blas, de tú a tú, como su asesor de confianza.
+- Eres directo, práctico y sin rodeos.
+- Siempre orientado a la acción: qué debe HACER, DECIR o PUBLICAR.
+- Conoces la política local canaria y el funcionamiento de los ayuntamientos.
+- Ayudas a preparar intervenciones en pleno, posts de Facebook, respuestas a críticas y estrategia electoral.
+- Respuestas concisas y accionables — nada de teoría, solo práctica.`,
+        messages: chatHistory
+      })
+    });
+    const data = await res.json();
+    const respIA = data.content?.[0]?.text || 'Sin respuesta';
+    chatHistory.push({ role: 'assistant', content: respIA });
+
+    // Reemplazar el "pensando..."
+    const msgs = document.getElementById('chatMsgs');
+    msgs.lastElementChild.remove();
+    agregarMensaje('ia', respIA);
+  } catch(e) {
+    const msgs = document.getElementById('chatMsgs');
+    msgs.lastElementChild.remove();
+    agregarMensaje('ia', 'Error al conectar: ' + e.message);
+  }
+}
+
+function preguntaRapida(txt) {
+  document.getElementById('chatInput').value = txt;
+  enviarChat();
+}
+
+function agregarMensaje(tipo, texto) {
+  const msgs = document.getElementById('chatMsgs');
+  const div = document.createElement('div');
+  div.className = `chat-msg ${tipo}`;
+  div.innerHTML = `
+    <div class="chat-avatar ${tipo === 'ia' ? 'chat-ia-av' : 'chat-user-av'}">${tipo === 'ia' ? '🤖' : '👤'}</div>
+    <div class="chat-burbuja">${tipo === 'ia' ? texto.replace(/\n/g,'<br>') : texto}</div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ══════════════════════════════════
+// MAPA PANEL
+// ══════════════════════════════════
+function iniciarMapaPanel() {
+  if (mapaPanel) return;
   const script = document.createElement('script');
   script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
   document.head.appendChild(script);
-
   const link = document.createElement('link');
   link.rel = 'stylesheet';
   link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
   document.head.appendChild(link);
 
   script.onload = () => {
-    mapaLeaflet = L.map('mapaCalor').setView([28.1500, -15.6400], 13);
+    mapaPanel = L.map('mapaPanel').setView([28.1500, -15.6400], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap'
-    }).addTo(mapaLeaflet);
+    }).addTo(mapaPanel);
 
-    db.ref('quejas').once('value', snap => {
-      const quejas = snap.val() || {};
-      Object.values(quejas).forEach(q => {
-        if (q.lat && q.lng) {
-          const color = q.urgencia === 'muy_urgente' ? 'red' :
-                        q.urgencia === 'urgente' ? 'orange' : 'blue';
-          L.circleMarker([q.lat, q.lng], {
-            radius: 10, fillColor: color, color: 'white',
-            weight: 2, opacity: 1, fillOpacity: 0.7
-          }).addTo(mapaLeaflet)
-            .bindPopup(`<b>${q.barrio}</b><br>${q.categoria}<br>${q.descripcion?.substring(0,80)}`);
-        }
-      });
+    Object.values(todasQuejas).forEach(q => {
+      if (q.lat && q.lng) {
+        const color = q.urgencia === 'muy_urgente' ? 'red' :
+                      q.urgencia === 'urgente' ? 'orange' : '#2e86c1';
+        L.circleMarker([q.lat, q.lng], {
+          radius: 10, fillColor: color, color: 'white',
+          weight: 2, opacity: 1, fillOpacity: 0.8
+        }).addTo(mapaPanel)
+          .bindPopup(`<b>${q.barrio}</b><br>${q.categoria}<br><em>${q.descripcion?.substring(0,80)}</em><br><b>Estado: ${q.estado || 'pendiente'}</b>`);
+      }
     });
   };
 }
 
 // ══════════════════════════════════
-// ESTADÍSTICAS
+// CONSISTORIO — PREGUNTAR AL ASESOR
 // ══════════════════════════════════
-function cargarEstadisticas() {
-  db.ref('quejas').once('value', snap => {
-    const quejas = Object.values(snap.val() || {});
-    const hoy = new Date().toLocaleDateString('es-ES');
-
-    document.getElementById('statTotal').textContent = quejas.length;
-    document.getElementById('statPendientes').textContent = quejas.filter(q => q.estado === 'pendiente').length;
-    document.getElementById('statResueltas').textContent = quejas.filter(q => q.estado === 'resuelto').length;
-    document.getElementById('statHoy').textContent = quejas.filter(q => q.fecha && q.fecha.startsWith(hoy)).length;
-
-    // Por categoría
-    const porCat = {};
-    quejas.forEach(q => { porCat[q.categoria] = (porCat[q.categoria] || 0) + 1; });
-    const catHTML = Object.entries(porCat).sort((a,b) => b[1]-a[1]).map(([cat, n]) => `
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-        <div style="flex:1;font-size:13px">${cat}</div>
-        <div style="width:${Math.round(n/quejas.length*100)}%;max-width:120px;height:8px;background:var(--azul-claro);border-radius:4px"></div>
-        <div style="font-size:13px;font-weight:700;min-width:24px">${n}</div>
-      </div>`).join('');
-    document.getElementById('statsCategorias').innerHTML = catHTML || '<p style="color:#aaa">Sin datos</p>';
-
-    // Por barrio top 5
-    const porBarrio = {};
-    quejas.forEach(q => { if(q.barrio) porBarrio[q.barrio] = (porBarrio[q.barrio] || 0) + 1; });
-    const barrioHTML = Object.entries(porBarrio).sort((a,b) => b[1]-a[1]).slice(0,5).map(([b, n], i) => `
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-        <div style="font-size:16px;min-width:24px">${['🥇','🥈','🥉','4️⃣','5️⃣'][i]}</div>
-        <div style="flex:1;font-size:13px">${b}</div>
-        <div style="font-size:14px;font-weight:700;color:var(--azul)">${n}</div>
-      </div>`).join('');
-    document.getElementById('statsBarrios').innerHTML = barrioHTML || '<p style="color:#aaa">Sin datos</p>';
-  });
-}
-
-// ══════════════════════════════════
-// IDEAS
-// ══════════════════════════════════
-function cargarIdeas() {
-  db.ref('ideas').orderByChild('timestamp').limitToLast(5).once('value', snap => {
-    const ideas = snap.val() || {};
-    const html = Object.values(ideas).reverse().map(i => `
-      <div class="idea-card">
-        <div style="font-size:14px">${i.texto}</div>
-        <div style="font-size:11px;color:#aaa;margin-top:6px">${i.fecha || ''}</div>
-      </div>`).join('');
-    document.getElementById('listaIdeas').innerHTML = html || '<p style="text-align:center;color:#aaa;padding:20px">Sé el primero en publicar una idea 💡</p>';
-  });
-}
-
-function compartirWhatsApp() {
-  const idea = document.getElementById('idea').value.trim();
-  if (!idea) { mostrarToast('Escribe tu idea primero'); return; }
-  guardarIdea(idea);
-  window.open(`https://wa.me/?text=${encodeURIComponent('💡 Propuesta para Gáldar:\n\n' + idea + '\n\nConcejalía UxGC · José Blas Díaz')}`, '_blank');
-}
-
-function compartirFacebook() {
-  const idea = document.getElementById('idea').value.trim();
-  if (!idea) { mostrarToast('Escribe tu idea primero'); return; }
-  guardarIdea(idea);
-  window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(window.location.href), '_blank');
-}
-
-function enviarAPleno() {
-  const idea = document.getElementById('idea').value.trim();
-  if (!idea) { mostrarToast('Escribe tu idea primero'); return; }
-  guardarIdea(idea, true);
-  mostrarToast('✅ Propuesta enviada al panel del concejal para el próximo pleno');
-}
-
-function guardarIdea(texto, parPleno = false) {
-  db.ref('ideas').push({
-    texto, parPleno,
-    fecha: new Date().toLocaleString('es-ES'),
-    timestamp: Date.now()
-  });
-  document.getElementById('idea').value = '';
+async function preguntarSobreRival(contexto) {
+  // Navegar al tab asesor y hacer la pregunta
+  tab('asesor');
+  document.getElementById('tb-asesor').classList.add('active');
+  setTimeout(() => {
+    document.getElementById('chatInput').value = contexto;
+    enviarChat();
+  }, 300);
 }
 
 // ══════════════════════════════════
@@ -950,5 +1602,197 @@ function mostrarToast(msg) {
   setTimeout(() => t.style.display = 'none', 3000);
 }
 </script>
+
+// ══════════════════════════════════════════════════════════
+// WORKER URL (reutilizar el mismo que ya funciona)
+// ══════════════════════════════════════════════════════════
+const WORKER = 'https://orange-boat-6d42.pedrosaborrego.workers.dev';
+
+async function claudeCall(system, userMsg, maxTokens = 1500) {
+  const res = await fetch(WORKER, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: maxTokens,
+      system,
+      messages: [{ role: 'user', content: userMsg }]
+    })
+  });
+  const data = await res.json();
+  return data.content?.[0]?.text || 'Sin respuesta';
+}
+
+function mostrarEnPanel(resultadoId, btnId, texto) {
+  const el = document.getElementById(resultadoId);
+  el.textContent = texto;
+  el.style.display = 'block';
+  const btn = document.getElementById(btnId);
+  if (btn) btn.style.display = 'inline-flex';
+}
+
+function panelCargando(resultadoId) {
+  const el = document.getElementById(resultadoId);
+  el.innerHTML = '<div class="ia-loading"><i class="fas fa-spinner fa-spin"></i> Consultando asesor IA...</div>';
+  el.style.display = 'block';
+}
+
+// ── ANALIZADOR DE PRENSA ──────────────────────────────────
+async function analizarPrensa() {
+  const url = document.getElementById('prensa-url').value.trim();
+  const foco = document.getElementById('prensa-foco').value.trim();
+  if (!url) { mostrarToast('⚠️ Introduce una URL'); return; }
+  panelCargando('prensa-resultado');
+  try {
+    let contenido = '';
+    try {
+      const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+      const r = await fetch(proxy);
+      const d = await r.json();
+      const tmp = document.createElement('div');
+      tmp.innerHTML = d.contents;
+      tmp.querySelectorAll('script,style,nav,header,footer,aside').forEach(e => e.remove());
+      contenido = (tmp.innerText || tmp.textContent || '').replace(/\s+/g,' ').trim().substring(0,6000);
+    } catch(_) { contenido = `[No se pudo leer automáticamente. URL: ${url}]`; }
+
+    const system = `Eres el asesor de comunicación de José Blas Díaz (UxGC, Gáldar, oposición 1/19).
+Analiza artículos de prensa y devuelve SIEMPRE esta estructura:
+📰 RESUMEN (3 frases)
+🏘️ QUÉ SIGNIFICA PARA LOS VECINOS DE GÁLDAR
+🎯 POSICIÓN RECOMENDADA PARA UxGC
+⚠️ PUNTOS CONFLICTIVOS O SOSPECHOSOS
+📣 TEXTO LISTO PARA FACEBOOK/WHATSAPP (máx. 3 párrafos)
+💬 POSIBLE DECLARACIÓN A MEDIOS (2-3 frases)`;
+
+    const msg = `ARTÍCULO: ${url}\nCONTENIDO: ${contenido}\n${foco ? 'ASPECTO DE INTERÉS: ' + foco : ''}`;
+    const resp = await claudeCall(system, msg);
+    mostrarEnPanel('prensa-resultado', 'btnCopiarPrensa', resp);
+  } catch(e) { mostrarEnPanel('prensa-resultado', null, '⚠️ Error: ' + e.message); }
+}
+
+// ── PREPARADOR DE PLENOS ──────────────────────────────────
+async function prepararPleno() {
+  const fecha = document.getElementById('pleno-fecha').value.trim();
+  const orden = document.getElementById('pleno-orden').value.trim();
+  const contexto = document.getElementById('pleno-contexto').value.trim();
+  if (!orden) { mostrarToast('⚠️ Escribe el orden del día'); return; }
+  panelCargando('pleno-resultado');
+  try {
+    const system = `Eres el jefe de gabinete de José Blas Díaz (UxGC, Gáldar, 1 concejal vs 19).
+Para CADA PUNTO del orden del día genera:
+━━━━━━━━━━━━━━━━━━━━━━━
+PUNTO [N]: [TÍTULO]
+━━━━━━━━━━━━━━━━━━━━━━━
+📋 QUÉ ES: (2 líneas)
+🗳️ VOTO RECOMENDADO: SÍ / NO / ABSTENCIÓN
+💡 MOTIVO: (1-2 frases contundentes)
+🎤 INTERVENCIÓN EN PLENO: (texto listo para leer, máx. 4 líneas)
+❓ PREGUNTA INCÓMODA: (para lanzar al equipo de gobierno)
+⚠️ TRAMPA POSIBLE: (qué puede intentar el gobierno)
+📢 PARA LOS VECINOS: (cómo explicarlo fuera del pleno)`;
+
+    const resp = await claudeCall(system, `PLENO DE GÁLDAR\nFecha: ${fecha||'Próximo pleno'}\nORDEN DEL DÍA:\n${orden}\n${contexto?'CONTEXTO: '+contexto:''}`, 2000);
+    mostrarEnPanel('pleno-resultado', 'btnCopiarPleno', resp);
+  } catch(e) { mostrarEnPanel('pleno-resultado', null, '⚠️ Error: ' + e.message); }
+}
+
+// ── REDACTOR DE RUEGOS ────────────────────────────────────
+async function redactarRuego() {
+  const tipo = document.getElementById('ruego-tipo').value;
+  const texto = document.getElementById('ruego-texto').value.trim();
+  const destino = document.getElementById('ruego-destino').value;
+  if (!texto) { mostrarToast('⚠️ Describe qué quieres pedir'); return; }
+  panelCargando('ruego-resultado');
+  const tipos = { ruego:'RUEGO', pregunta:'PREGUNTA', mocion:'MOCIÓN', enmienda:'ENMIENDA' };
+  const destinos = {
+    alcalde:'Sr. Alcalde-Presidente del Excmo. Ayuntamiento de Gáldar',
+    hacienda:'Sr./Sra. Concejal/a Delegado/a de Hacienda',
+    obras:'Sr./Sra. Concejal/a Delegado/a de Obras y Servicios',
+    pleno:'Al Pleno del Excmo. Ayuntamiento de Gáldar'
+  };
+  try {
+    const system = `Eres letrado especializado en derecho administrativo local canario.
+Redactas escritos formales para el Ayuntamiento de Gáldar con formato oficial del ROF.
+Incluye: encabezado formal, cuerpo argumentado, solicitud concreta, pie con firma y fecha.
+Al final añade una versión coloquial para explicarlo a los vecinos.`;
+    const resp = await claudeCall(system, `Redacta un ${tipos[tipo]} para:\nDIRIGIDO A: ${destinos[destino]}\nCONCEJAL: José Blas Díaz Bolaños, Grupo Municipal UxGC\nINTENCIÓN: ${texto}`);
+    mostrarEnPanel('ruego-resultado', 'btnCopiarRuego', resp);
+  } catch(e) { mostrarEnPanel('ruego-resultado', null, '⚠️ Error: ' + e.message); }
+}
+
+// ── SIMULADOR DE DEBATE ───────────────────────────────────
+async function simularDebate() {
+  const rival = document.getElementById('debate-rival').value;
+  const ataque = document.getElementById('debate-ataque').value.trim();
+  const tema = document.getElementById('debate-tema').value.trim();
+  if (!ataque) { mostrarToast('⚠️ Escribe el argumento del rival'); return; }
+  panelCargando('debate-resultado');
+  const rivales = {
+    alcalde:'Alcalde Teodoro Sosa Monzón (BNR-NC, 19 años en el poder)',
+    julio:'Julio Mateo Castillo (1er Teniente, controla medios locales)',
+    hacienda:'Concejala de Hacienda (gestión económica municipal)',
+    psoe:'Francisco Hernández Rosales (PSC-PSOE, oposición separada)',
+    otro:'Otro concejal del equipo de gobierno'
+  };
+  try {
+    const system = `Eres el coach de debate político de José Blas Díaz (UxGC, Gáldar, 1 vs 19).
+Prepara réplicas para plenos municipales. Estructura SIEMPRE:
+🎯 RÉPLICA RECOMENDADA (texto listo para decir en el pleno)
+💪 POR QUÉ FUNCIONA ESTA RÉPLICA
+📊 DATOS QUE REFUERZAN TU POSICIÓN
+🔄 SI TE CONTRAATACA CON... (anticipa siguiente movimiento)
+⛔ LO QUE NO DEBES DECIR
+📣 VERSIÓN PARA REDES SOCIALES DESPUÉS DEL PLENO`;
+    const resp = await claudeCall(system, `SIMULACIÓN DE DEBATE\nRival: ${rivales[rival]}\nTema: ${tema||'Municipal'}\nATAQUE: "${ataque}"`);
+    mostrarEnPanel('debate-resultado', 'btnCopiarDebate', resp);
+  } catch(e) { mostrarEnPanel('debate-resultado', null, '⚠️ Error: ' + e.message); }
+}
+
+// ── TRADUCTOR DE DOCUMENTOS ───────────────────────────────
+async function traducirDocumento() {
+  const tipo = document.getElementById('doc-tipo').value;
+  const texto = document.getElementById('doc-texto').value.trim();
+  const foco = document.getElementById('doc-foco').value.trim();
+  if (!texto) { mostrarToast('⚠️ Pega el texto del documento'); return; }
+  panelCargando('doc-resultado');
+  const tipos = { boc:'BOC', decreto:'Decreto de Alcaldía', contrato:'Contrato/pliego', presupuesto:'Presupuesto', acta:'Acta de pleno', otro:'Documento oficial' };
+  try {
+    const system = `Eres analista de documentación administrativa para el concejal José Blas (UxGC, Gáldar).
+Analiza documentos oficiales y devuelve:
+📄 QUÉ DICE EL DOCUMENTO (lenguaje llano, máx. 5 líneas)
+🏘️ QUÉ SIGNIFICA PARA GÁLDAR Y SUS VECINOS
+💰 IMPLICACIÓN ECONÓMICA (si hay dinero, explicar claramente)
+🔍 PUNTOS QUE MERECEN ATENCIÓN O INVESTIGACIÓN
+❓ PREGUNTAS QUE DEBERÍA HACER BLAS EN PLENO
+📣 CÓMO EXPLICARLO A LOS VECINOS (máx. 3 frases)`;
+    const resp = await claudeCall(system, `TIPO: ${tipos[tipo]}\nMUNICIPIO: Gáldar\nDOCUMENTO:\n${texto.substring(0,8000)}\n${foco?'INTERÉS PRIORITARIO: '+foco:''}`, 1500);
+    mostrarEnPanel('doc-resultado', 'btnCopiarDoc', resp);
+  } catch(e) { mostrarEnPanel('doc-resultado', null, '⚠️ Error: ' + e.message); }
+}
+
+// ── COMUNICADOR DE BARRIO ─────────────────────────────────
+async function comunicarVecinos() {
+  const texto = document.getElementById('vecinos-texto').value.trim();
+  const formato = document.getElementById('vecinos-formato').value;
+  const tono = document.getElementById('vecinos-tono').value;
+  if (!texto) { mostrarToast('⚠️ Describe qué quieres comunicar'); return; }
+  panelCargando('vecinos2-resultado');
+  const formatos = {
+    whatsapp:'mensaje WhatsApp (máx. 3 párrafos, tono de barrio)',
+    facebook:'post Facebook (gancho inicial, emojis moderados, máx. 250 palabras)',
+    papel:'nota para buzones o tablón (A5, formal pero comprensible)',
+    respuesta:'respuesta empática a queja de vecino con solución',
+    declaracion:'declaración pública formal ante una polémica local'
+  };
+  const tonos = { cercano:'cercano y directo', firme:'firme y contundente', informativo:'informativo y objetivo', positivo:'positivo y constructivo' };
+  try {
+    const system = `Eres el responsable de comunicación vecinal de UxGC en Gáldar.
+REGLA: Si un vecino de 70 años sin estudios no lo entiende, no es buena comunicación.
+Sin tecnicismos, sin siglas sin explicar, sin frases largas.
+Siempre orientado a qué significa para el vecino, no para el político.`;
+    const resp = await claudeCall(system, `Redacta un ${formatos[formato]} para UxGC Gáldar.\nTono: ${tonos[tono]}\nINFORMACIÓN: ${texto}`);
+    mostrarEnPanel('vecinos2-resultado', 'btnCopiarVecinos', resp);
+  } catch(e) { mostrarEnPanel('vecinos2-resultado', null, '⚠️ Error: ' + e.message); }
+}
 </body>
 </html>
